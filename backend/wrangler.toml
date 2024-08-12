@@ -1,0 +1,7 @@
+name = "task-managment-backend"
+compatibility_date = "2024-07-14"
+type = "javascript"
+
+[vars]
+DATABASE_URL=""
+JWT_SECRET = ""
