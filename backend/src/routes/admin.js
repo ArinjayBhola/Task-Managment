@@ -188,7 +188,7 @@ adminRouter.post("/usersignup", authentication, async (c) => {
       { id: signupUser.id, email: signupUser.email },
       c.env.JWT_SECRET,
     );
-    return c.json({ token });
+    return c.json({ id: signupUser.id });
   } catch (error) {
     return c.status(411);
   }
@@ -241,6 +241,36 @@ adminRouter.get("/task/:taskId", authentication, async (c) => {
       return c.json({ msg: "Task not found" });
     } else {
       return c.json(task);
+    }
+  } catch (error) {
+    console.error("Error querying the database:", error);
+    return c
+      .status(500)
+      .json({ msg: "Internal Server Error", error: error.message });
+  }
+});
+
+adminRouter.get("/user/:userId", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const { userId } = c.req.param();
+    const user = await prisma.user.findUnique({
+      where: {
+        id: parseInt(userId),
+      },
+      include: {
+        password: false,
+        task: true,
+      },
+    });
+    if (!user) {
+      c.status(404);
+      return c.json({ msg: "User not found" });
+    } else {
+      return c.json(user);
     }
   } catch (error) {
     console.error("Error querying the database:", error);

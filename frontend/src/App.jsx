@@ -4,6 +4,7 @@ import AdminEditTask from "./pages/Admin/AdminEditTask";
 import AdminSignin from "./pages/Admin/AdminSignin";
 import AdminSignup from "./pages/Admin/AdminSignup";
 import CreateNewTask from "./pages/Admin/CreateNewTask";
+import SingleUser from "./pages/Admin/SingleUser";
 import User from "./pages/Admin/User";
 import AllUser from "./pages/User/AllUser";
 import MyTask from "./pages/User/MyTask";
@@ -26,6 +27,7 @@ function App() {
             <Route path="/users" element={<User />} />
             <Route path="/task/:id" element={<CreateNewTask />} />
             <Route path="/admin-edittask/:id" element={<AdminEditTask />} />
+            <Route path="/user/:userId" element={<SingleUser />} />
 
             {/* User routes */}
             <Route path="/user-signin" element={<UserSignin />} />

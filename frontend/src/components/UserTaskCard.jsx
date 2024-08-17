@@ -9,7 +9,7 @@ const UserTaskCard = ({ user }) => {
     <div className="border border-gray-300 shadow-lg p-6 rounded-lg bg-white">
       <div className="flex justify-between items-center mb-4">
         <div className="text-lg font-semibold text-gray-800">
-          Name: {user.name}
+          <Link to={`/user/${user.id}`}>Name: {user.name}</Link>
         </div>
         {window.location.pathname === "/users" && (
           <button

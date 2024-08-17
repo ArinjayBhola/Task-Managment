@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { toggleCreateUser } from "../redux/slice/createUserSlice";
 import { BACKEND_URL } from "../utils";
 
@@ -8,23 +9,33 @@ const CreateUserCard = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [postError, setPostError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const postUser = async () => {
-    const response = await axios.post(
-      `${BACKEND_URL}/api/v1/admin/usersignup`,
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        headers: {
-          Authorization: localStorage.getItem("token"),
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/api/v1/admin/usersignup`,
+        {
+          name,
+          email,
+          password,
         },
-      },
-    );
-    console.log(response);
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        },
+      );
+      if (response.status === 200) {
+        navigate(`/user/${response.data.id}`);
+      }
+    } catch (error) {
+      setPostError(true);
+      setErrorMessage(error.response.data.message);
+    }
   };
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-300">
@@ -70,6 +81,9 @@ const CreateUserCard = () => {
         >
           Create User
         </button>
+        {postError && (
+          <p className="text-center mt-3 text-red-500">{errorMessage}</p>
+        )}
       </div>
     </div>
   );
