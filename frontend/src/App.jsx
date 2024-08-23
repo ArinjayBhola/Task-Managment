@@ -1,5 +1,6 @@
 import { Provider } from "react-redux";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminEditTask from "./pages/Admin/AdminEditTask";
 import AdminSignin from "./pages/Admin/AdminSignin";
 import AdminSignup from "./pages/Admin/AdminSignup";
@@ -15,29 +16,77 @@ import appStore from "./redux/appStore";
 
 function App() {
   return (
-    <>
-      <BrowserRouter>
-        <Provider store={appStore}>
-          <Routes>
-            <Route path="/" element={<Welcome />} />
+    <BrowserRouter>
+      <Provider store={appStore}>
+        <Routes>
+          <Route path="/" element={<Welcome />} />
 
-            {/* Admin routes */}
-            <Route path="admin-signin" element={<AdminSignin />} />
-            <Route path="/admin-signup" element={<AdminSignup />} />
-            <Route path="/users" element={<User />} />
-            <Route path="/task/:id" element={<CreateNewTask />} />
-            <Route path="/admin-edittask/:id" element={<AdminEditTask />} />
-            <Route path="/user/:userId" element={<SingleUser />} />
+          {/* Admin routes */}
+          <Route path="admin-signin" element={<AdminSignin />} />
+          <Route path="/admin-signup" element={<AdminSignup />} />
 
-            {/* User routes */}
-            <Route path="/user-signin" element={<UserSignin />} />
-            <Route path="/mytasks" element={<MyTask />} />
-            <Route path="/usertasks" element={<AllUser />} />
-            <Route path="/user-edittask/:id" element={<UserEditTask />} />
-          </Routes>
-        </Provider>
-      </BrowserRouter>
-    </>
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <User />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/task/:id"
+            element={
+              <ProtectedRoute>
+                <CreateNewTask />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-edittask/:id"
+            element={
+              <ProtectedRoute>
+                <AdminEditTask />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/:userId"
+            element={
+              <ProtectedRoute>
+                <SingleUser />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* User routes */}
+          <Route path="/user-signin" element={<UserSignin />} />
+          <Route
+            path="/mytasks"
+            element={
+              <ProtectedRoute>
+                <MyTask />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/usertasks"
+            element={
+              <ProtectedRoute>
+                <AllUser />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user-edittask/:id"
+            element={
+              <ProtectedRoute>
+                <UserEditTask />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Provider>
+    </BrowserRouter>
   );
 }
 

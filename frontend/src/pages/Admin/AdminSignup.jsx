@@ -22,7 +22,6 @@ const AdminSignup = () => {
         },
       },
     );
-    console.log(response);
     if (response.data.token) navigate("/users");
   };
 

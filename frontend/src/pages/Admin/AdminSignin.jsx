@@ -21,7 +21,6 @@ const AdminSignin = () => {
         },
       },
     );
-    console.log(response);
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
       navigate("/users");

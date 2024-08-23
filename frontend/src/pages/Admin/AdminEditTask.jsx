@@ -12,6 +12,9 @@ const AdminEditTask = () => {
   const [status, setStatus] = useState("Not Started");
   const [comments, setComments] = useState("");
   const [parsedDate, setParsedDate] = useState("");
+  const [taskId, setTaskId] = useState(undefined);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const { id } = useParams();
 
   useEffect(() => {
@@ -36,11 +39,32 @@ const AdminEditTask = () => {
     setDueDate(userTaskData.dueDate || "");
     setStatus(userTaskData.status || "Not Started");
     setComments(userTaskData.comments || "");
+    setTaskId(userTaskData.id || "");
   }, [userTaskData]);
 
+  const deleteTask = async () => {
+    axios
+      .delete(`${BACKEND_URL}/api/v1/admin/delete`, {
+        data: {
+          taskId,
+        },
+        headers: {
+          Authorization: localStorage.getItem("token"),
+        },
+      })
+      .then(() => {
+        setSuccessMessage("Task deleted successfully!");
+        setErrorMessage("");
+      })
+      .catch(() => {
+        setErrorMessage("Error deleting task.");
+        setSuccessMessage("");
+      });
+  };
+
   const handleSubmit = async () => {
-    try {
-      const response = await axios.put(
+    axios
+      .put(
         `${BACKEND_URL}/api/v1/admin/admincomment`,
         {
           taskId: parseInt(id),
@@ -52,21 +76,35 @@ const AdminEditTask = () => {
             Authorization: localStorage.getItem("token"),
           },
         },
-      );
-      console.log("Response:", response);
-    } catch (error) {
-      console.error("Error updating task:", error);
-    }
+      )
+      .then(() => {
+        setSuccessMessage("Task updated successfully!");
+        setErrorMessage("");
+      })
+      .catch(() => {
+        setErrorMessage("Error updating task.");
+        setSuccessMessage("");
+      });
   };
 
-  if (userTaskData) {
-    return (
-      <div>
-        <Header />
+  return (
+    <div>
+      <Header />
+      {userTaskData ? (
         <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
           <h2 className="text-2xl font-bold mb-6 text-center">
             {userTaskData.user ? userTaskData.user.name : "Loading..."}
           </h2>
+          {successMessage && (
+            <div className="bg-green-100 text-green-700 p-2 rounded mb-4">
+              {successMessage}
+            </div>
+          )}
+          {errorMessage && (
+            <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
+              {errorMessage}
+            </div>
+          )}
           <div className="space-y-4">
             <div className="text-sm font-medium text-gray-700">
               <p>
@@ -133,22 +171,28 @@ const AdminEditTask = () => {
             >
               Update Task
             </button>
+            <div>
+              <button
+                className="w-full py-2 px-4 border border-transparent shadow-sm text-sm font-medium bg-red-500 hover:bg-red-700 text-white rounded z-100"
+                onClick={deleteTask}
+              >
+                Delete Task
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  } else {
-    return (
-      <div>
-        <Header />
-        <div className="space-y-6">
-          {[1].map((_, index) => (
-            <ShimmerForm key={index} />
-          ))}
+      ) : (
+        <div>
+          <Header />
+          <div className="space-y-6">
+            {[1].map((_, index) => (
+              <ShimmerForm key={index} />
+            ))}
+          </div>
         </div>
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
 };
 
 export default AdminEditTask;

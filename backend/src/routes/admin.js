@@ -279,3 +279,27 @@ adminRouter.get("/user/:userId", async (c) => {
       .json({ msg: "Internal Server Error", error: error.message });
   }
 });
+
+adminRouter.delete("/delete", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const { taskId } = await c.req.json();
+    const deleteTask = await prisma.task.delete({
+      where: {
+        id: taskId,
+      },
+    });
+    if (deleteTask) {
+      return c.json({ msg: "Task deleted successfully" });
+    }
+    return c.status(404).json({ msg: "Task not found" });
+  } catch (error) {
+    console.error("Error querying the database:", error);
+    return c
+      .status(500)
+      .json({ msg: "Internal Server Error", error: error.message });
+  }
+});
