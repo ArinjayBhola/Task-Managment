@@ -17,7 +17,6 @@ const AllUser = () => {
       })
       .then((response) => {
         setUserTask(response.data);
-        console.log(response);
       });
   }, []);
 

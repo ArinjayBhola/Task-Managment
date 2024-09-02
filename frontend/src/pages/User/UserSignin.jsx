@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils";
 
@@ -7,6 +7,11 @@ const UserSignin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (token) navigate("/usertasks");
+  }, []);
 
   const signinUser = () => {
     axios

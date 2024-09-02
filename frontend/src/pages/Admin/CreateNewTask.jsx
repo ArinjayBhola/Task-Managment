@@ -40,7 +40,6 @@ const CreateNewTask = () => {
         },
       },
     );
-    console.log(response);
   };
 
   return (

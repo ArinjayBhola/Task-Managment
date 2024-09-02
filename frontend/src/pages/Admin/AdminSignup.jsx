@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils/index";
 
@@ -8,6 +8,11 @@ const AdminSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (token) navigate("/users");
+  }, []);
   const postData = async () => {
     const response = await axios.post(
       `${BACKEND_URL}/api/v1/admin/signup`,

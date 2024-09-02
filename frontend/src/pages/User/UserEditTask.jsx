@@ -58,7 +58,6 @@ const UserEditTask = () => {
           },
         },
       );
-      console.log(response);
     } catch (error) {
       console.error("Error updating task:", error);
     }
