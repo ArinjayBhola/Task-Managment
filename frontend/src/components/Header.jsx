@@ -31,14 +31,14 @@ const Header = () => {
           {userRole === "User" && (
             <button
               onClick={() => navigate("/mytasks")}
-              className="bg-white text-blue-600 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-200 transition duration-300"
+              className="bg-white text-blue-600 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-200"
             >
               My Task
             </button>
           )}
           <button
             onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300"
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md"
           >
             Logout
           </button>

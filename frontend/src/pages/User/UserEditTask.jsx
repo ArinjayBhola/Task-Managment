@@ -12,9 +12,12 @@ const UserEditTask = () => {
   const [status, setStatus] = useState("Not Started");
   const [comments, setComments] = useState("");
   const [parsedDate, setParsedDate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const { id } = useParams();
 
   useEffect(() => {
+    setLoading(true);
     axios
       .get(`${BACKEND_URL}/api/v1/user/bulktask/${id}`, {
         headers: {
@@ -24,7 +27,13 @@ const UserEditTask = () => {
       .then((response) => {
         setTaskData(response.data);
       })
-      .catch((error) => console.error("Error fetching task data:", error));
+      .catch((error) => {
+        setError("Error fetching task data.");
+        console.error("Error fetching task data:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [id]);
 
   useEffect(() => {
@@ -44,7 +53,9 @@ const UserEditTask = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.put(
+      setLoading(true);
+      setError("");
+      await axios.put(
         `${BACKEND_URL}/api/v1/user/taskupdate`,
         {
           taskId: parseInt(id),
@@ -59,7 +70,10 @@ const UserEditTask = () => {
         },
       );
     } catch (error) {
-      console.error("Error updating task:", error);
+      setError("Error updating task.");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,7 +130,6 @@ const UserEditTask = () => {
                 Status:
               </label>
               <select
-                type="text"
                 name="status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -127,12 +140,14 @@ const UserEditTask = () => {
                 <option>Completed</option>
               </select>
             </div>
+            {error && <p className="text-red-500 text-center mt-2">{error}</p>}
             <button
               type="submit"
               className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               onClick={handleSubmit}
+              disabled={loading}
             >
-              Update Task
+              {loading ? "Updating..." : "Update Task"}
             </button>
           </div>
         </div>

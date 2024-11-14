@@ -12,7 +12,11 @@ const TaskDetails = ({ task }) => {
     return `${day}-${month}-${year}`;
   };
   return (
-    <div className="border border-gray-300 shadow-lg p-6 rounded-lg bg-white m-5 flex justify-between">
+    <div
+      className={`border border-gray-300 transition duration-300 shadow-lg p-6 rounded-lg bg-white m-5 flex justify-between ${
+        window.location.pathname === "/users" ? "hover:bg-gray-100" : ""
+      }`}
+    >
       <div>
         <div className="mb-2 text-sm text-gray-600">
           Created At: {formatDate(task.createdAt)}
@@ -28,7 +32,7 @@ const TaskDetails = ({ task }) => {
       {window.location.pathname === "/mytasks" && (
         <div>
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             onClick={() => navigate(`/user-edittask/${task.id}`)}
           >
             Edit Task

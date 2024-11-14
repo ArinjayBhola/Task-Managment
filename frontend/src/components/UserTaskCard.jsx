@@ -13,7 +13,7 @@ const UserTaskCard = ({ user }) => {
         </div>
         {window.location.pathname === "/users" && (
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
             onClick={() => navigate(`/task/${user.id}`)}
           >
             Create a Task

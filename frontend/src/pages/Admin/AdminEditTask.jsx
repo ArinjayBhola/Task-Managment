@@ -15,6 +15,7 @@ const AdminEditTask = () => {
   const [taskId, setTaskId] = useState(undefined);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const { id } = useParams();
 
   useEffect(() => {
@@ -24,6 +25,7 @@ const AdminEditTask = () => {
   }, [dueDate]);
 
   useEffect(() => {
+    setLoading(true);
     axios
       .get(`${BACKEND_URL}/api/v1/admin/task/${id}`, {
         headers: {
@@ -31,7 +33,13 @@ const AdminEditTask = () => {
         },
       })
       .then((response) => setUserTaskData(response.data))
-      .catch((error) => console.error("Error fetching task data:", error));
+      .catch((error) => {
+        setErrorMessage("Error fetching task data.");
+        console.error("Error fetching task data:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [id]);
 
   useEffect(() => {
@@ -43,6 +51,7 @@ const AdminEditTask = () => {
   }, [userTaskData]);
 
   const deleteTask = async () => {
+    setLoading(true);
     axios
       .delete(`${BACKEND_URL}/api/v1/admin/delete`, {
         data: {
@@ -59,10 +68,14 @@ const AdminEditTask = () => {
       .catch(() => {
         setErrorMessage("Error deleting task.");
         setSuccessMessage("");
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     axios
       .put(
         `${BACKEND_URL}/api/v1/admin/admincomment`,
@@ -84,6 +97,9 @@ const AdminEditTask = () => {
       .catch(() => {
         setErrorMessage("Error updating task.");
         setSuccessMessage("");
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -153,7 +169,6 @@ const AdminEditTask = () => {
                 Status:
               </label>
               <select
-                type="text"
                 name="status"
                 value={status}
                 disabled
@@ -168,15 +183,17 @@ const AdminEditTask = () => {
               type="submit"
               className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               onClick={handleSubmit}
+              disabled={loading}
             >
-              Update Task
+              {loading ? "Updating..." : "Update Task"}
             </button>
             <div>
               <button
-                className="w-full py-2 px-4 border border-transparent shadow-sm text-sm font-medium bg-red-500 hover:bg-red-700 text-white rounded z-100"
+                className="w-full py-2 px-4 border border-transparent shadow-sm text-sm font-medium bg-red-500 hover:bg-red-700 text-white rounded"
                 onClick={deleteTask}
+                disabled={loading}
               >
-                Delete Task
+                {loading ? "Deleting..." : "Delete Task"}
               </button>
             </div>
           </div>

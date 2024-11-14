@@ -11,8 +11,12 @@ const CreateNewTask = () => {
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState("Not Started");
   const [comments, setComments] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    // Fetch user data
     axios
       .get(`${BACKEND_URL}/api/v1/admin/${id}`, {
         headers: {
@@ -21,25 +25,44 @@ const CreateNewTask = () => {
       })
       .then((response) => {
         setUserData(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching user data:", error);
+        setErrorMessage("Error fetching user data.");
       });
   }, [id]);
 
   const handleSubmit = async () => {
-    const response = await axios.post(
-      `${BACKEND_URL}/api/v1/admin/task`,
-      {
-        description,
-        dueDate,
-        status,
-        id: parseInt(id),
-        comments,
-      },
-      {
-        headers: {
-          Authorization: localStorage.getItem("token"),
+    setLoading(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    await axios
+      .post(
+        `${BACKEND_URL}/api/v1/admin/task`,
+        {
+          description,
+          dueDate,
+          status,
+          id: parseInt(id),
+          comments,
         },
-      },
-    );
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        },
+      )
+      .then(() => {
+        setSuccessMessage("Task created successfully!");
+      })
+      .catch((error) => {
+        console.error("Error creating task:", error);
+        setErrorMessage("Error creating task.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (
@@ -47,6 +70,19 @@ const CreateNewTask = () => {
       <Header />
       <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
         <h2 className="text-2xl font-bold mb-4 text-center">Create Task</h2>
+
+        {successMessage && (
+          <div className="bg-green-100 text-green-700 p-2 rounded mb-4">
+            {successMessage}
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
+            {errorMessage}
+          </div>
+        )}
+
         <div className="space-y-4">
           <div className="text-sm font-medium text-gray-700">
             <p>Name: {userData.name}</p>
@@ -98,11 +134,13 @@ const CreateNewTask = () => {
               <option>Completed</option>
             </select>
           </div>
+
           <button
             onClick={handleSubmit}
             className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={loading}
           >
-            Submit
+            {loading ? "Creating..." : "Submit"}
           </button>
         </div>
       </div>
