@@ -7,13 +7,13 @@ const UserTaskCard = ({ user }) => {
 
   return (
     <div className="border border-gray-300 shadow-lg p-6 rounded-lg bg-white">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div className="text-lg font-semibold text-gray-800">
           <Link to={`/user/${user.id}`}>Name: {user.name}</Link>
         </div>
         {window.location.pathname === "/users" && (
           <button
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+            className="mt-4 sm:mt-0 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
             onClick={() => navigate(`/task/${user.id}`)}
           >
             Create a Task

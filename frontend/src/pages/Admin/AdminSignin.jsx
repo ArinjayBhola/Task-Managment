@@ -23,15 +23,8 @@ const AdminSignin = () => {
       setIsClicked(true);
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/admin/signin`,
-        {
-          email,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
+        { email, password },
+        { headers: { "Content-Type": "application/json" } },
       );
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
@@ -52,15 +45,15 @@ const AdminSignin = () => {
       style={{ backgroundImage: 'url("/signin.jpg")' }}
     >
       <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-      <div className="flex items-center justify-center min-h-screen relative z-10">
-        <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
-          <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+      <div className="flex items-center justify-center min-h-screen relative z-10 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
             Sign in to your Admin account
           </h2>
           <input
             type="email"
             placeholder="Email"
-            className="border border-gray-300 w-full p-3 mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 w-full p-3 mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             onChange={(e) => setEmail(e.target.value)}
             value={email}
           />
@@ -68,7 +61,7 @@ const AdminSignin = () => {
             <input
               type={isSelected ? "text" : "password"}
               placeholder="Password"
-              className="border border-gray-300 w-full p-3 pr-12 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 w-full p-3 pr-12 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               onChange={(e) => setPassword(e.target.value)}
               value={password}
             />
@@ -81,15 +74,19 @@ const AdminSignin = () => {
           </div>
           <button
             onClick={signin}
-            className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 transition-colors duration-300"
+            className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 transition-colors duration-300 text-sm sm:text-base"
             disabled={clicked}
           >
             {clicked ? "Signing In..." : "Sign In"}
           </button>
 
-          {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+          {error && (
+            <p className="text-red-500 text-center mt-2 text-sm sm:text-base">
+              {error}
+            </p>
+          )}
 
-          <div className="text-center mt-4 text-gray-600">
+          <div className="text-center mt-4 text-gray-600 text-sm sm:text-base">
             Don&apos;t have an account?{" "}
             <Link to="/admin-signup" className="text-blue-500 hover:underline">
               Sign up

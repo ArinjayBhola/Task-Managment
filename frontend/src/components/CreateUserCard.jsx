@@ -52,14 +52,15 @@ const CreateUserCard = () => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-300">
-      <div className="relative w-full max-w-md p-6 bg-white shadow-lg rounded-md transition-transform transform scale-100">
+      <div className="relative w-full max-w-xs sm:max-w-md lg:max-w-lg p-6 bg-white shadow-lg rounded-md transition-transform transform scale-100">
         <button
-          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          className="absolute top-2 right-2 text-2xl text-gray-600 font-bold hover:text-gray-800"
           onClick={() => dispatch(toggleCreateUser())}
         >
-          Close
+          &times;
         </button>
-        <h2 className="text-xl mb-4">Create User</h2>
+
+        <h2 className="text-xl mb-4 text-center sm:text-left">Create User</h2>
 
         {successMessage && (
           <div className="bg-green-100 text-green-700 p-2 rounded mb-4">
@@ -75,7 +76,7 @@ const CreateUserCard = () => {
 
         <div className="mb-4">
           <input
-            className="w-full px-3 py-2 border rounded"
+            className="w-full px-3 py-2 border rounded focus:outline-none"
             type="text"
             placeholder="Name"
             onChange={(e) => setName(e.target.value)}
@@ -84,7 +85,7 @@ const CreateUserCard = () => {
         </div>
         <div className="mb-4">
           <input
-            className="w-full px-3 py-2 border rounded"
+            className="w-full px-3 py-2 border rounded focus:outline-none"
             type="email"
             placeholder="Email"
             onChange={(e) => setEmail(e.target.value)}
