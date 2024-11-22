@@ -26,6 +26,7 @@ const User = () => {
   };
 
   if (data.length > 0) {
+    const reversedData = [...data].reverse();
     return (
       <div>
         <Header />
@@ -42,7 +43,7 @@ const User = () => {
           {selector && <CreateUserCard />}
 
           <div className="grid grid-cols-1 gap-6 mt-6">
-            {data.map((user) => (
+            {reversedData.map((user) => (
               <div key={user.id}>
                 <UserTaskCard user={user} />
               </div>
