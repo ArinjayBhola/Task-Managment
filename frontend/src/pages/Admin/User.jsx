@@ -1,8 +1,9 @@
+import AddIcon from "@mui/icons-material/Add";
+import { Fab, Tooltip } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CreateUserCard from "../../components/CreateUserCard";
-import Header from "../../components/Header";
 import HomeShimmer from "../../components/HomeShimmer";
 import UserTaskCard from "../../components/UserTaskCard";
 import { toggleCreateUser } from "../../redux/slice/createUserSlice";
@@ -11,10 +12,11 @@ import { BACKEND_URL } from "../../utils";
 const User = () => {
   const [data, setData] = useState([]);
   const selector = useSelector((state) => state.createUser);
+  const dispatch = useDispatch();
+
   useEffect(() => {
     fetchData();
   }, []);
-  const dispatch = useDispatch();
 
   const fetchData = async () => {
     const response = await axios.get(`${BACKEND_URL}/api/v1/admin/bulk`, {
@@ -25,45 +27,44 @@ const User = () => {
     setData(response.data);
   };
 
-  if (data.length > 0) {
-    const reversedData = [...data].reverse();
-    return (
-      <div>
-        <Header />
-        <div className="p-4">
-          <div className="mb-4">
-            <button
-              onClick={() => dispatch(toggleCreateUser())}
-              className="bg-blue-500 hover:bg-blue-600 shadow-md text-white px-4 py-2 rounded mr-2"
-            >
-              Create a user
-            </button>
-          </div>
+  const reversedData = [...data].reverse();
 
-          {selector && <CreateUserCard />}
+  return (
+    <div className="w-full relative">
+      {selector && <CreateUserCard />}
 
-          <div className="grid grid-cols-1 gap-6 mt-6">
-            {reversedData.map((user) => (
-              <div key={user.id}>
-                <UserTaskCard user={user} />
-              </div>
+      <div className="grid grid-cols-1 gap-6 mt-6 w-8/12 mx-auto">
+        {data.length > 0 ? (
+          reversedData.map((user) => (
+            <div key={user.id}>
+              <UserTaskCard user={user} />
+            </div>
+          ))
+        ) : (
+          <div className="space-y-6">
+            {[1, 2, 3].map((_, index) => (
+              <HomeShimmer key={index} />
             ))}
           </div>
-        </div>
+        )}
       </div>
-    );
-  } else {
-    return (
-      <div>
-        <Header />
-        <div className="space-y-6">
-          {[1, 2, 3].map((_, index) => (
-            <HomeShimmer key={index} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+
+      <Tooltip title="Create User" arrow>
+        <Fab
+          color="primary"
+          aria-label="create"
+          onClick={() => dispatch(toggleCreateUser())}
+          style={{
+            position: "fixed",
+            bottom: 16,
+            right: 16,
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
+    </div>
+  );
 };
 
 export default User;

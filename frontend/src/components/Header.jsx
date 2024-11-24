@@ -1,19 +1,33 @@
+import {
+  AppBar,
+  Box,
+  Button,
+  Menu,
+  MenuItem,
+  TextField,
+  Toolbar,
+} from "@mui/material";
+import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { BACKEND_URL } from "../utils";
 
 const Header = () => {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState("");
+  const [userName, setUserName] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        const decode = jwtDecode(token);
-        setUserRole(decode.role);
-      }
-    }, 1000);
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decode = jwtDecode(token);
+      setUserRole(decode.role);
+    }
   }, []);
 
   const handleLogout = () => {
@@ -25,32 +39,160 @@ const Header = () => {
     localStorage.removeItem("token");
   };
 
+  const fetchUsers = async (query) => {
+    if (query.trim() === "") {
+      setSearchResults([]);
+      setMessage("");
+      setAnchorEl(null);
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/api/v1/admin/finduser/${query}`,
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        },
+      );
+      setSearchResults(response.data);
+      if (response.data.length === 0) {
+        setMessage("No user found");
+      }
+      setAnchorEl(document.getElementById("search-box"));
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setMessage("Error fetching users");
+      setSearchResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setUserName(query);
+    fetchUsers(query);
+  };
+
+  const handleSelectUser = (user) => {
+    setUserName(user.name);
+    setSearchResults([]);
+    setMessage("");
+    setAnchorEl(null);
+    console.log(user);
+    navigate(`/user/${user.id}`);
+  };
+
   return (
-    <header className="bg-customColor text-white p-5 shadow-lg">
-      <div className="container mx-auto flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-        <Link to={userRole === "User" ? "/usertasks" : "/users"}>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-wide text-center sm:text-left">
-            Task Management System
-          </h1>
-        </Link>
-        <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-          {userRole === "User" && (
-            <button
-              onClick={() => navigate("/mytasks")}
-              className="bg-white text-blue-600 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-200 transition-colors duration-300 text-sm sm:text-base"
-            >
-              My Task
-            </button>
+    <AppBar
+      position="static"
+      sx={{
+        backgroundColor: "#f5f5f5",
+        boxShadow: "none",
+        color: "#000",
+        height: "70px",
+        mb: 5,
+      }}
+    >
+      <Toolbar sx={{ justifyContent: "space-between", px: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+          }}
+        >
+          <Link
+            to={userRole === "User" ? "/usertasks" : "/users"}
+            className="text-black font-bold text-2xl"
+          >
+            Task Management
+          </Link>
+
+          {userRole === "Admin" && (
+            <Box sx={{ position: "relative", width: "300px" }}>
+              <TextField
+                id="search-box"
+                label="Search User"
+                variant="standard"
+                value={userName}
+                onChange={handleSearchChange}
+                fullWidth
+              />
+              <Menu
+                anchorEl={anchorEl}
+                open={
+                  Boolean(anchorEl) &&
+                  (loading || searchResults.length > 0 || message)
+                }
+                onClose={() => setAnchorEl(null)}
+                PaperProps={{
+                  style: {
+                    maxHeight: 200,
+                    width: "300px",
+                  },
+                }}
+              >
+                {loading && <MenuItem disabled>Loading...</MenuItem>}
+                {message && !loading && <MenuItem disabled>{message}</MenuItem>}
+                {!loading &&
+                  searchResults.map((user, index) => (
+                    <MenuItem
+                      key={index}
+                      onClick={() => handleSelectUser(user)}
+                    >
+                      {user.name}
+                    </MenuItem>
+                  ))}
+              </Menu>
+            </Box>
           )}
-          <button
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {userRole === "User" && (
+            <Button
+              variant="contained"
+              onClick={() => navigate("/mytasks")}
+              sx={{
+                backgroundColor: "#1976d2",
+                color: "#ffffff",
+                textTransform: "none",
+                borderRadius: "20px",
+                px: 3,
+                py: 1,
+                fontSize: "1rem",
+                "&:hover": {
+                  backgroundColor: "#1565c0",
+                },
+              }}
+            >
+              My Tasks
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            color="error"
             onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors duration-300 text-sm sm:text-base"
+            sx={{
+              textTransform: "none",
+              borderRadius: "20px",
+              px: 3,
+              py: 1,
+              fontSize: "1rem",
+            }}
           >
             Logout
-          </button>
-        </div>
-      </div>
-    </header>
+          </Button>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 

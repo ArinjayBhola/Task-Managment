@@ -1,7 +1,15 @@
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Header from "../../components/Header";
 import ShimmerForm from "../../components/ShimmerForm";
 import { BACKEND_URL } from "../../utils";
 
@@ -103,112 +111,99 @@ const AdminEditTask = () => {
       });
   };
 
+  const nameCapital = (name) => {
+    return name.toUpperCase() || "Loading...";
+  };
+
   return (
-    <div>
-      <Header />
+    <Box mx="auto" mt={5} maxWidth="sm" p={3} boxShadow={3} borderRadius={2}>
       {userTaskData ? (
-        <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            {userTaskData.user ? userTaskData.user.name : "Loading..."}
-          </h2>
+        <>
+          <div className="mb-2 font-bold text-3xl text-center">
+            {userTaskData.user
+              ? nameCapital(userTaskData.user.name)
+              : "Loading..."}
+          </div>
+
           {successMessage && (
-            <div className="bg-green-100 text-green-700 p-2 rounded mb-4">
+            <Alert severity="success" sx={{ mb: 2 }}>
               {successMessage}
-            </div>
+            </Alert>
           )}
           {errorMessage && (
-            <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
+            <Alert severity="error" sx={{ mb: 2 }}>
               {errorMessage}
-            </div>
+            </Alert>
           )}
-          <div className="space-y-4">
-            <div className="text-sm font-medium text-gray-700">
-              <p>
-                Email:{" "}
-                {userTaskData.user ? userTaskData.user.email : "Loading..."}
-              </p>
+
+          <Box display="flex" flexDirection="column" gap={2}>
+            <div className="mb-2 font-semibold text-lg">
+              Email:
+              {userTaskData.user ? userTaskData.user.email : "Loading..."}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Description:
-              </label>
-              <input
-                type="text"
-                name="description"
-                value={description}
-                disabled
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Due Date:
-              </label>
-              <input
-                type="date"
-                id="dueDate"
-                value={parsedDate}
-                disabled
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Comments:
-              </label>
-              <input
-                type="text"
-                name="comments"
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Status:
-              </label>
-              <select
-                name="status"
-                value={status}
-                disabled
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"
-              >
-                <option>Not Started</option>
-                <option>In Progress</option>
-                <option>Completed</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+
+            <TextField
+              label="Description"
+              value={description}
+              fullWidth
+              disabled
+            />
+
+            <TextField
+              label="Due Date"
+              type="date"
+              value={parsedDate}
+              disabled
+              fullWidth
+            />
+
+            <TextField
+              label="Comments"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              fullWidth
+              multiline
+              rows={1}
+            />
+
+            <Select
+              value={status}
+              fullWidth
+              disabled
+              displayEmpty
+              inputProps={{ readOnly: true }}
+            >
+              <MenuItem value="Not Started">Not Started</MenuItem>
+              <MenuItem value="In Progress">In Progress</MenuItem>
+              <MenuItem value="Completed">Completed</MenuItem>
+            </Select>
+
+            <Button
+              variant="contained"
+              color="primary"
               onClick={handleSubmit}
               disabled={loading}
+              startIcon={loading && <CircularProgress size={20} />}
             >
               {loading ? "Updating..." : "Update Task"}
-            </button>
-            <div>
-              <button
-                className="w-full py-2 px-4 border border-transparent shadow-sm text-sm font-medium bg-red-500 hover:bg-red-700 text-white rounded"
-                onClick={deleteTask}
-                disabled={loading}
-              >
-                {loading ? "Deleting..." : "Delete Task"}
-              </button>
-            </div>
-          </div>
-        </div>
+            </Button>
+
+            <Button
+              variant="contained"
+              color="error"
+              onClick={deleteTask}
+              disabled={loading}
+            >
+              {loading ? "Deleting..." : "Delete Task"}
+            </Button>
+          </Box>
+        </>
       ) : (
-        <div>
-          <Header />
-          <div className="space-y-6">
-            {[1].map((_, index) => (
-              <ShimmerForm key={index} />
-            ))}
-          </div>
-        </div>
+        <Box>
+          <ShimmerForm />
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 

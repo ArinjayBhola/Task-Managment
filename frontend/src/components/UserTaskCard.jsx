@@ -1,30 +1,50 @@
 /* eslint-disable react/prop-types */
-import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@mui/material";
+import { jwtDecode } from "jwt-decode";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import TaskDetails from "./TaskDetails";
 
 const UserTaskCard = ({ user }) => {
-  const navigate = useNavigate();
+  const [userRole, setUserRole] = useState("");
+  useEffect(() => {
+    setTimeout(() => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const decode = jwtDecode(token);
+        setUserRole(decode.role);
+      }
+    }, 1000);
+  }, []);
+
+  const toUpperCase = (str) => {
+    return str.toUpperCase();
+  };
 
   return (
-    <div className="border border-gray-300 shadow-lg p-6 rounded-lg bg-white">
+    <div className="border border-gray-300 shadow-lg p-6 rounded-lg bg-gray-50">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-        <div className="text-lg font-semibold text-gray-800">
-          <Link to={`/user/${user.id}`}>Name: {user.name}</Link>
+        <div className="text-xl font-semibold text-gray-800">
+          {userRole === "Admin" ? (
+            <Link to={`/user/${user.id}`}>Name: {toUpperCase(user.name)}</Link>
+          ) : (
+            <>Name: {toUpperCase(user.name)}</>
+          )}
         </div>
         {window.location.pathname === "/users" && (
-          <button
-            className="mt-4 sm:mt-0 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-            onClick={() => navigate(`/task/${user.id}`)}
+          <Button
+            component={Link}
+            to={`/task/${user.id}`}
+            variant="contained"
+            size="medium"
+            color="primary"
           >
-            Create a Task
-          </button>
+            Create new task
+          </Button>
         )}
       </div>
       {user.task.map((task) => (
-        <div
-          key={task.id}
-          className="border border-gray-300 p-4 mt-4 rounded-md bg-gray-50"
-        >
+        <div key={task.id}>
           {window.location.pathname === "/users" ? (
             <Link to={`/admin-edittask/${task.id}`}>
               <TaskDetails task={task} />

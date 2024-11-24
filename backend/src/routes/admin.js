@@ -303,3 +303,34 @@ adminRouter.delete("/delete", async (c) => {
       .json({ msg: "Internal Server Error", error: error.message });
   }
 });
+
+adminRouter.get("/finduser/:userName", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+  console.log("object");
+  try {
+    const { userName } = c.req.param();
+    console.log(userName);
+    const user = await prisma.user.findMany({
+      where: {
+        name: {
+          contains: userName,
+          mode: "insensitive",
+        },
+      },
+    });
+    console.log(user);
+    if (!user) {
+      c.status(404);
+      return c.json({ msg: "User not found" });
+    } else {
+      return c.json(user);
+    }
+  } catch (error) {
+    console.error("Error querying the database:", error);
+    return c
+      .status(500)
+      .json({ msg: "Internal Server Error", error: error.message });
+  }
+});

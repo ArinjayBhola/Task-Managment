@@ -4,8 +4,20 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toggleCreateUser } from "../redux/slice/createUserSlice";
 import { BACKEND_URL } from "../utils";
-import Eye from "./Eye";
-import HideEye from "./HideEye";
+
+import CloseIcon from "@mui/icons-material/Close";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import {
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  InputAdornment,
+  TextField,
+} from "@mui/material";
 
 const CreateUserCard = () => {
   const [name, setName] = useState("");
@@ -15,7 +27,8 @@ const CreateUserCard = () => {
   const [postError, setPostError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [isSelected, setIsSelected] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -51,72 +64,90 @@ const CreateUserCard = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-300">
-      <div className="relative w-full max-w-xs sm:max-w-md lg:max-w-lg p-6 bg-white shadow-lg rounded-md transition-transform transform scale-100">
-        <button
-          className="absolute top-2 right-2 text-2xl text-gray-600 font-bold hover:text-gray-800"
+    <Dialog
+      open
+      onClose={() => dispatch(toggleCreateUser())}
+      PaperProps={{
+        sx: { width: "450px", maxWidth: "90%" },
+      }}
+    >
+      <DialogTitle>
+        Create User
+        <IconButton
+          aria-label="close"
           onClick={() => dispatch(toggleCreateUser())}
+          sx={{ position: "absolute", right: 8, top: 8 }}
         >
-          &times;
-        </button>
-
-        <h2 className="text-xl mb-4 text-center sm:text-left">Create User</h2>
-
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers>
         {successMessage && (
-          <div className="bg-green-100 text-green-700 p-2 rounded mb-4">
-            {successMessage}
+          <div className="text-center">
+            <div className="text-green-400">{successMessage}</div>
           </div>
         )}
 
         {postError && (
-          <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
-            {errorMessage}
+          <div className="text-center">
+            <div className="text-red-600">{errorMessage}</div>
           </div>
         )}
 
-        <div className="mb-4">
-          <input
-            className="w-full px-3 py-2 border rounded focus:outline-none"
-            type="text"
-            placeholder="Name"
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            className="w-full px-3 py-2 border rounded focus:outline-none"
-            type="email"
-            placeholder="Email"
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="relative mb-6">
-          <input
-            type={isSelected ? "text" : "password"}
-            placeholder="Password"
-            className="border border-gray-300 w-full p-3 pr-12 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-          />
-          <div
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
-            onClick={() => setIsSelected(!isSelected)}
-          >
-            {isSelected ? <Eye /> : <HideEye />}
-          </div>
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        <TextField
+          fullWidth
+          label="Name"
+          variant="outlined"
+          margin="normal"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          size="small"
+        />
+        <TextField
+          fullWidth
+          label="Email"
+          type="email"
+          variant="outlined"
+          margin="normal"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          size="small"
+        />
+        <TextField
+          fullWidth
+          label="Password"
+          type={isPasswordVisible ? "text" : "password"}
+          variant="outlined"
+          margin="normal"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          size="small"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                  edge="end"
+                >
+                  {isPasswordVisible ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button
+          variant="contained"
+          fullWidth
+          color="primary"
           onClick={postUser}
           disabled={loading}
+          startIcon={loading && <CircularProgress size={20} />}
+          sx={{ mt: 2 }}
         >
           {loading ? "Creating..." : "Create User"}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 };
 
