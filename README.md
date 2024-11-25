@@ -48,6 +48,6 @@ Visit the live application: **[Task Management](https://task-managment-8ihr.verc
 ## Tech Stack
 
 - **Frontend**: React, HTML5, CSS3, JavaScript
-- **Backend**: Node.js, Express.js
+- **Backend**: Node.js, Hono
 - **Database**: PostgreSQL
 - **Authentication**: JWT (JSON Web Tokens)
