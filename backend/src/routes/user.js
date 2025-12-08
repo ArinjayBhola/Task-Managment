@@ -1,17 +1,15 @@
-import { PrismaClient } from "@prisma/client/edge";
-import { withAccelerate } from "@prisma/extension-accelerate";
 import { Hono } from "hono";
 import { sign, verify } from "hono/jwt";
 import { authentication } from "../middleware/auth";
 import { signinSchema } from "../utils";
+import { getDb } from "../db";
+import { users, tasks } from "../db/schema";
+import { eq, and } from "drizzle-orm";
 
 export const userRouter = new Hono();
 
 userRouter.post("/signin", async (c) => {
-  const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
+  const db = getDb(c.env.DATABASE_URL);
   const body = await c.req.json();
   const parseBody = signinSchema.safeParse(body);
   if (!parseBody.success) {
@@ -20,54 +18,42 @@ userRouter.post("/signin", async (c) => {
   }
   const { email, password } = body;
   try {
-    const signinUser = await prisma.user.findFirst({
-      where: {
-        email,
-        password,
-      },
+    const signinUser = await db.query.users.findFirst({
+      where: and(eq(users.email, email), eq(users.password, password)),
     });
+
     if (!signinUser) {
       c.status(403);
       return c.json({ error: "user not found" });
     }
-    const token = await sign(
-      { email: signinUser.email, id: signinUser.id, role: signinUser.role },
-      c.env.JWT_SECRET,
-    );
+    const token = await sign({ email: signinUser.email, id: signinUser.id, role: signinUser.role }, c.env.JWT_SECRET);
     return c.json({ token });
   } catch (error) {
-    return c.status(403);
+    console.error("Signin Error:", error);
+    return c.json({ error: "Error signing in" }, 403);
   }
 });
 
 userRouter.get("/bulk", authentication, async (c) => {
-  const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
+  const db = getDb(c.env.DATABASE_URL);
   try {
     const authHeader = c.req.header("Authorization");
     const decodedValue = await verify(authHeader, c.env.JWT_SECRET);
     const { id } = decodedValue;
-    const task = await prisma.user.findMany({
-      where: {
-        id,
-      },
-      include: {
-        task: true,
+    const userTasks = await db.query.users.findMany({
+      where: eq(users.id, id),
+      with: {
+        tasks: true,
       },
     });
-    return c.json(task);
+    return c.json(userTasks);
   } catch (error) {
-    return c.status(411);
+    return c.json({ error: "Error fetching tasks" }, 411);
   }
 });
 
 userRouter.put("/taskupdate", authentication, async (c) => {
-  const prima = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
+  const db = getDb(c.env.DATABASE_URL);
   try {
     const body = await c.req.json();
     const { comments, status, taskId } = body;
@@ -79,48 +65,40 @@ userRouter.put("/taskupdate", authentication, async (c) => {
     if (status !== undefined) data.status = status;
     if (comments !== undefined) data.comments = comments;
 
-    const taskUpdate = await prima.task.update({
-      where: {
-        userId: id,
-        id: taskId,
-      },
-      data: data,
-    });
+    const [taskUpdate] = await db
+      .update(tasks)
+      .set(data)
+      .where(and(eq(tasks.userId, id), eq(tasks.id, taskId)))
+      .returning();
+
     return c.json(taskUpdate);
   } catch (error) {
-    return c.status(411).json({ error: error.message });
+    return c.json({ error: error.message }, 411);
   }
 });
 
 userRouter.get("/bulktask", authentication, async (c) => {
-  const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
+  const db = getDb(c.env.DATABASE_URL);
   try {
-    const user = await prisma.user.findMany({
-      include: {
-        task: true,
+    const allUsers = await db.query.users.findMany({
+      with: {
+        tasks: true,
       },
     });
-    return c.json(user);
+
+    return c.json(allUsers);
   } catch (error) {
-    return c.status(411);
+    return c.json({ error: "Error fetching tasks" }, 411);
   }
 });
 
 userRouter.get("/bulktask/:id", authentication, async (c) => {
-  const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
+  const db = getDb(c.env.DATABASE_URL);
   try {
     const { id } = c.req.param();
-    const task = await prisma.task.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-      include: {
+    const task = await db.query.tasks.findFirst({
+      where: eq(tasks.id, parseInt(id)),
+      with: {
         user: true,
       },
     });
@@ -133,8 +111,6 @@ userRouter.get("/bulktask/:id", authentication, async (c) => {
     }
   } catch (error) {
     console.error("Error querying the database:", error);
-    return c
-      .status(500)
-      .json({ msg: "Internal Server Error", error: error.message });
+    return c.status(500).json({ msg: "Internal Server Error", error: error.message });
   }
 });

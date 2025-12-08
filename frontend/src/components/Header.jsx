@@ -1,16 +1,10 @@
-import {
-  AppBar,
-  Box,
-  Button,
-  Menu,
-  MenuItem,
-  TextField,
-  Toolbar,
-} from "@mui/material";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { LogOut, Search, UserCircle } from "lucide-react";
+import { Button } from "./ui/Button";
 import { BACKEND_URL } from "../utils";
 
 const Header = () => {
@@ -20,30 +14,33 @@ const Header = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      const decode = jwtDecode(token);
-      setUserRole(decode.role);
+      try {
+        const decode = jwtDecode(token);
+        setUserRole(decode.role);
+      } catch (e) {
+        console.error("Invalid token");
+      }
     }
   }, []);
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
     if (userRole === "User") {
       navigate("/user-signin");
-    } else if (userRole === "Admin") {
+    } else {
       navigate("/admin-signin");
     }
-    localStorage.removeItem("token");
   };
 
   const fetchUsers = async (query) => {
     if (query.trim() === "") {
       setSearchResults([]);
       setMessage("");
-      setAnchorEl(null);
       return;
     }
 
@@ -51,19 +48,15 @@ const Header = () => {
     setMessage("");
 
     try {
-      const response = await axios.get(
-        `${BACKEND_URL}/api/v1/admin/finduser/${query}`,
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
+      const response = await axios.get(`${BACKEND_URL}/api/v1/admin/finduser/${query}`, {
+        headers: {
+          Authorization: localStorage.getItem("token"),
         },
-      );
+      });
       setSearchResults(response.data);
       if (response.data.length === 0) {
         setMessage("No user found");
       }
-      setAnchorEl(document.getElementById("search-box"));
     } catch (error) {
       console.error("Error fetching users:", error);
       setMessage("Error fetching users");
@@ -77,122 +70,93 @@ const Header = () => {
     const query = e.target.value;
     setUserName(query);
     fetchUsers(query);
+    setShowSearch(true);
   };
 
   const handleSelectUser = (user) => {
     setUserName(user.name);
     setSearchResults([]);
     setMessage("");
-    setAnchorEl(null);
-    console.log(user);
+    setShowSearch(false);
     navigate(`/user/${user.id}`);
   };
 
   return (
-    <AppBar
-      position="static"
-      sx={{
-        backgroundColor: "#f5f5f5",
-        boxShadow: "none",
-        color: "#000",
-        height: "70px",
-        mb: 5,
-      }}
-    >
-      <Toolbar sx={{ justifyContent: "space-between", px: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10,
-          }}
-        >
-          <Link
-            to={userRole === "User" ? "/usertasks" : "/users"}
-            className="text-black font-bold text-2xl"
-          >
-            Task Management
-          </Link>
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-xl">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <Link
+          to={userRole === "User" ? "/usertasks" : "/users"}
+          className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
+          TaskMaster
+        </Link>
 
+        <div className="flex items-center gap-4">
           {userRole === "Admin" && (
-            <Box sx={{ position: "relative", width: "300px" }}>
-              <TextField
-                id="search-box"
-                label="Search User"
-                variant="standard"
-                value={userName}
-                onChange={handleSearchChange}
-                fullWidth
-              />
-              <Menu
-                anchorEl={anchorEl}
-                open={
-                  Boolean(anchorEl) &&
-                  (loading || searchResults.length > 0 || message)
-                }
-                onClose={() => setAnchorEl(null)}
-                PaperProps={{
-                  style: {
-                    maxHeight: 200,
-                    width: "300px",
-                  },
-                }}
-              >
-                {loading && <MenuItem disabled>Loading...</MenuItem>}
-                {message && !loading && <MenuItem disabled>{message}</MenuItem>}
-                {!loading &&
-                  searchResults.map((user, index) => (
-                    <MenuItem
-                      key={index}
-                      onClick={() => handleSelectUser(user)}
-                    >
-                      {user.name}
-                    </MenuItem>
-                  ))}
-              </Menu>
-            </Box>
-          )}
-        </Box>
+            <div className="relative w-64 hidden md:block">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={userName}
+                  onChange={handleSearchChange}
+                  onFocus={() => setShowSearch(true)}
+                  onBlur={() => setTimeout(() => setShowSearch(false), 200)}
+                  className="w-full h-10 pl-9 pr-4 rounded-full bg-white/5 border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                />
+              </div>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {userRole === "User" && (
-            <Button
-              variant="contained"
-              onClick={() => navigate("/mytasks")}
-              sx={{
-                backgroundColor: "#1976d2",
-                color: "#ffffff",
-                textTransform: "none",
-                borderRadius: "20px",
-                px: 3,
-                py: 1,
-                fontSize: "1rem",
-                "&:hover": {
-                  backgroundColor: "#1565c0",
-                },
-              }}
-            >
-              My Tasks
-            </Button>
+              <AnimatePresence>
+                {showSearch && (searchResults.length > 0 || message) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-12 left-0 w-full bg-card border border-white/10 rounded-xl shadow-xl overflow-hidden">
+                    {loading && <div className="p-3 text-sm text-muted-foreground">Loading...</div>}
+                    {message && !loading && <div className="p-3 text-sm text-muted-foreground">{message}</div>}
+                    {!loading &&
+                      searchResults.map((user) => (
+                        <div
+                          key={user.id}
+                          onClick={() => handleSelectUser(user)}
+                          className="px-4 py-2 hover:bg-white/5 cursor-pointer flex items-center gap-2 text-sm">
+                          <UserCircle className="w-4 h-4 text-primary" />
+                          {user.name}
+                        </div>
+                      ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleLogout}
-            sx={{
-              textTransform: "none",
-              borderRadius: "20px",
-              px: 3,
-              py: 1,
-              fontSize: "1rem",
-            }}
-          >
-            Logout
-          </Button>
-        </Box>
-      </Toolbar>
-    </AppBar>
+
+          <div className="flex items-center gap-2">
+            {userRole === "User" && (
+              <Link to="/mytasks">
+                <Button
+                  variant="ghost"
+                  size="sm">
+                  My Tasks
+                </Button>
+              </Link>
+            )}
+
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2">
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </motion.header>
   );
 };
 

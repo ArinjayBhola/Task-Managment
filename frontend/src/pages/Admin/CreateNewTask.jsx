@@ -1,24 +1,23 @@
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  MenuItem,
-  Select,
-  TextField,
-} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
+import { Select } from "../../components/ui/Select";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 const CreateNewTask = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [userData, setUserData] = useState({});
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState("Not Started");
   const [comments, setComments] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -26,17 +25,10 @@ const CreateNewTask = () => {
   useEffect(() => {
     axios
       .get(`${BACKEND_URL}/api/v1/admin/${id}`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
+        headers: { Authorization: localStorage.getItem("token") },
       })
-      .then((response) => {
-        setUserData(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-        setErrorMessage("Error fetching user data.");
-      });
+      .then((response) => setUserData(response.data))
+      .catch((error) => console.error("Error fetching user data:", error));
   }, [id]);
 
   const handleSubmit = async () => {
@@ -44,118 +36,99 @@ const CreateNewTask = () => {
     setSuccessMessage("");
     setErrorMessage("");
 
-    await axios
-      .post(
+    try {
+      await axios.post(
         `${BACKEND_URL}/api/v1/admin/task`,
-        {
-          description,
-          dueDate,
-          status,
-          id: parseInt(id),
-          comments,
-        },
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        },
-      )
-      .then(() => {
-        setSuccessMessage("Task created successfully!");
-      })
-      .catch((error) => {
-        console.error("Error creating task:", error);
-        setErrorMessage("Error creating task.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
-  const capitalName = (str) => {
-    return str?.toUpperCase();
+        { description, dueDate, status, id: parseInt(id), comments },
+        { headers: { Authorization: localStorage.getItem("token") } },
+      );
+      setSuccessMessage("Task created successfully!");
+      setTimeout(() => navigate(-1), 1000);
+    } catch (error) {
+      setErrorMessage("Error creating task.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Box
-      maxWidth="sm"
-      mx="auto"
-      mt={5}
-      p={4}
-      bgcolor="background.paper"
-      boxShadow={3}
-      borderRadius={2}
-    >
-      <div className="font-semibold text-2xl mb-4 text-center">
-        Create New Task
-      </div>
+    <div className="container mx-auto px-4 py-10 flex items-center justify-center min-h-[80vh]">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-lg">
+        <Card className="border-white/10 relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute left-4 top-4 text-muted-foreground"
+            onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          </Button>
 
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
+          <div className="text-center mb-8 mt-6">
+            <h1 className="text-2xl font-bold text-white">Assign New Task</h1>
+            <p className="text-muted-foreground mt-2">
+              Assigning to <span className="text-primary font-medium">{userData.name || "..."}</span>
+            </p>
+          </div>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
+          <div className="space-y-4">
+            {successMessage && (
+              <div className="p-3 bg-green-500/10 text-green-400 rounded-lg text-sm border border-green-500/20">
+                {successMessage}
+              </div>
+            )}
+            {errorMessage && (
+              <div className="p-3 bg-red-500/10 text-red-400 rounded-lg text-sm border border-red-500/20">
+                {errorMessage}
+              </div>
+            )}
 
-      <Box mb={3}>
-        <div className="font-semibold text-lg">
-          Name: {capitalName(userData.name) || "Loading..."}
-        </div>
-        <div className="font-semibold text-lg">
-          Email: {userData.email || "Loading..."}
-        </div>
-      </Box>
+            <Input
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Task details..."
+            />
 
-      <Box component="form" display="flex" flexDirection="column" gap={2}>
-        <TextField
-          label="Description"
-          fullWidth
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+            <Input
+              label="Due Date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
 
-        <TextField
-          label="Due Date"
-          type="date"
-          fullWidth
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+            <Select
+              label="Status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              options={[
+                { value: "Not Started", label: "Not Started" },
+                { value: "In Progress", label: "In Progress" },
+                { value: "Completed", label: "Completed" },
+              ]}
+            />
 
-        <TextField
-          label="Comments"
-          fullWidth
-          multiline
-          value={comments}
-          onChange={(e) => setComments(e.target.value)}
-        />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground ml-1">Comments</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-lg border border-input bg-white/5 px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </div>
 
-        <Select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          fullWidth
-        >
-          <MenuItem value="Not Started">Not Started</MenuItem>
-          <MenuItem value="In Progress">In Progress</MenuItem>
-          <MenuItem value="Completed">Completed</MenuItem>
-        </Select>
-
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSubmit}
-          disabled={loading}
-          startIcon={loading && <CircularProgress size={20} />}
-        >
-          {loading ? "Creating..." : "Submit"}
-        </Button>
-      </Box>
-    </Box>
+            <Button
+              className="w-full mt-4"
+              onClick={handleSubmit}
+              disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Task"}
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 

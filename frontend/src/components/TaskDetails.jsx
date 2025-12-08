@@ -1,95 +1,76 @@
 /* eslint-disable react/prop-types */
-import { Badge, Button } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { format, differenceInDays } from "date-fns";
+import { Card } from "./ui/Card";
+import { Button } from "./ui/Button";
+import { Calendar, Clock, AlertCircle } from "lucide-react";
+import clsx from "clsx";
 
 const TaskDetails = ({ task }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    return {
-      formatted: `${day}-${month}-${year}`,
-      parsedDate: date,
-    };
+    if (!dateString) return "No date";
+    return format(new Date(dateString), "MMM dd, yyyy");
   };
 
   const calculateDaysLeft = (dueDate) => {
-    const currentDate = new Date();
-    const timeDifference = dueDate - currentDate;
-    return Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+    if (!dueDate) return 0;
+    return differenceInDays(new Date(dueDate), new Date());
   };
 
-  const createdAt = formatDate(task.createdAt);
-  const dueDate = formatDate(task.dueDate);
-  const daysLeft = calculateDaysLeft(dueDate.parsedDate);
+  const daysLeft = calculateDaysLeft(task.dueDate);
+  const isUrgent = daysLeft <= 3 && task.status !== "Completed";
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Completed":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "In Progress":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      default:
+        return "bg-red-500/20 text-red-400 border-red-500/30";
+    }
+  };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between p-6 bg-white shadow-lg rounded-lg mb-4 max-w-4xl w-full hover:bg-gray-200 transition duration-1000">
-      <div className="flex-1 mb-4 sm:mb-0">
-        <p className="text-base text-gray-600 mb-2 font-semibold">
-          Created At: {createdAt.formatted}
-        </p>
-        <p className="text-base text-gray-600 mb-2 font-semibold">
-          Description: {task.description}
-        </p>
-        <p
-          className={`text-base mb-2 font-semibold ${
-            daysLeft <= 3 ? "text-red-500" : "text-gray-600"
-          }`}
-        >
-          Due Date: {dueDate.formatted}
-        </p>
-        <p className="text-base text-gray-600 mb-2 font-semibold">
-          Status: {task.status}
-          {task.status === "Completed" ? (
-            <Badge
-              color="success"
-              overlap="circular"
-              variant="dot"
-              sx={{ ml: 1 }}
-            />
-          ) : task.status === "In Progress" ? (
-            <Badge
-              color="info"
-              overlap="circular"
-              variant="dot"
-              sx={{ ml: 1 }}
-            />
-          ) : (
-            <Badge
-              color="error"
-              overlap="circular"
-              variant="dot"
-              sx={{ ml: 1 }}
-            />
-          )}
-        </p>
-      </div>
+    <Card className="mb-4 transition-all duration-300 hover:bg-white/5 group border-white/5">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="space-y-3 flex-1">
+          <div className="flex items-start justify-between">
+            <h3 className="text-lg font-semibold text-white/90 group-hover:text-primary transition-colors">
+              {task.description}
+            </h3>
+            <span className={clsx("px-3 py-1 rounded-full text-xs font-medium border", getStatusColor(task.status))}>
+              {task.status}
+            </span>
+          </div>
 
-      {window.location.pathname === "/mytasks" && (
-        <div className="flex justify-end items-center">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate(`/user-edittask/${task.id}`)}
-            sx={{
-              paddingX: 3,
-              paddingY: 1.5,
-              borderRadius: "20px",
-              "&:hover": {
-                backgroundColor: "#1565c0",
-              },
-            }}
-          >
-            Edit Task
-          </Button>
+          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" />
+              <span>Created: {formatDate(task.createdAt)}</span>
+            </div>
+            <div className={clsx("flex items-center gap-1.5", isUrgent && "text-destructive font-medium")}>
+              <Clock className="w-4 h-4" />
+              <span>Due: {formatDate(task.dueDate)}</span>
+              {isUrgent && <AlertCircle className="w-4 h-4" />}
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+
+        {location.pathname === "/mytasks" && (
+          <div className="flex items-center sm:self-center pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 sm:pl-4 sm:border-l sm:ml-4">
+            <Button
+              size="sm"
+              onClick={() => navigate(`/user-edittask/${task.id}`)}>
+              Edit Task
+            </Button>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };
 

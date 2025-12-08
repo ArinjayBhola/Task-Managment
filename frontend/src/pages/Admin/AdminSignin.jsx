@@ -1,20 +1,17 @@
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  TextField,
-} from "@mui/material";
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { BACKEND_URL } from "../../utils";
+import { motion } from "framer-motion";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
+import { ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react";
 
 const AdminSignin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSelected, setIsSelected] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -27,6 +24,7 @@ const AdminSignin = () => {
   const signin = async () => {
     try {
       setIsLoading(true);
+      setError("");
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/admin/signin`,
         { email, password },
@@ -37,8 +35,7 @@ const AdminSignin = () => {
         navigate("/users");
       }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || error.message || "An error occurred";
+      const errorMessage = error.response?.data?.message || error.message || "An error occurred";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -46,111 +43,77 @@ const AdminSignin = () => {
   };
 
   return (
-    <Box
-      sx={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "linear-gradient(135deg, #4e54c8, #8f94fb)",
-        padding: 2,
-      }}
-    >
-      <Box
-        sx={{
-          backgroundColor: "white",
-          padding: 4,
-          borderRadius: 3,
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)",
-          maxWidth: 400,
-          width: "100%",
-          textAlign: "center",
-        }}
-      >
-        <div className="font-semibold text-[#4e54c8] mb-5 text-4xl">
-          Admin Portal
-        </div>
+    <div className="min-h-screen w-full flex items-center justify-center bg-background relative overflow-hidden p-4">
+      {/* Background Ambience */}
+      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-primary/10 blur-[100px] animate-pulse" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[100px]" />
 
-        <div className="mb-3 bg-gray-200 border-b-2 border-gray-200"></div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md z-10">
+        <Card className="border-white/10 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
+            <p className="text-muted-foreground mt-2">Sign in to manage the platform</p>
+          </div>
 
-        <TextField
-          label="Email Address"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-          onChange={(e) => setEmail(e.target.value)}
-          value={email}
-          InputProps={{
-            sx: {
-              borderRadius: 2,
-            },
-          }}
-        />
+          <div className="space-y-4">
+            <Input
+              label="Email Address"
+              placeholder="admin@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-        <Box sx={{ position: "relative", marginBottom: 2 }}>
-          <TextField
-            label="Password"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            type={isSelected ? "text" : "password"}
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-            InputProps={{
-              sx: {
-                borderRadius: 2,
-              },
-            }}
-          />
-          <IconButton
-            sx={{
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
-            onClick={() => setIsSelected(!isSelected)}
-          >
-            {isSelected ? <Visibility /> : <VisibilityOff />}
-          </IconButton>
-        </Box>
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[34px] text-muted-foreground hover:text-white transition-colors">
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
 
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={signin}
-          disabled={isLoading}
-          sx={{
-            backgroundColor: "#4e54c8",
-            textTransform: "none",
-            fontSize: "1rem",
-            borderRadius: 2,
-            padding: "10px 0",
-            "&:hover": {
-              backgroundColor: "#373dbb",
-            },
-            marginTop: 2,
-          }}
-        >
-          {isLoading ? (
-            <CircularProgress size={24} sx={{ color: "white" }} />
-          ) : (
-            "Sign In"
-          )}
-        </Button>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="text-destructive text-sm bg-destructive/10 p-3 rounded-lg border border-destructive/20">
+                {error}
+              </motion.div>
+            )}
 
-        <div className="text-center mt-2">
-          Don&apos;t have an account?{" "}
-          <Link to="/admin-signup" className="text-[#4e54c8] font-semibold">
-            Sign up
-          </Link>
-        </div>
+            <Button
+              className="w-full mt-2"
+              onClick={signin}
+              disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign In"}
+            </Button>
+          </div>
 
-        {error && (
-          <div className=" text-red-700 px-4 py-3 relative">{error}</div>
-        )}
-      </Box>
-    </Box>
+          <div className="text-center mt-6 text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link
+              to="/admin-signup"
+              className="text-primary hover:text-primary/80 font-medium transition-colors">
+              Sign up
+            </Link>
+          </div>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 

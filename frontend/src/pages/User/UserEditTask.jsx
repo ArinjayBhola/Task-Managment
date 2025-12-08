@@ -1,69 +1,50 @@
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
-} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import ShimmerForm from "../../components/ShimmerForm";
+import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils";
+import HomeShimmer from "../../components/HomeShimmer";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
+import { Select } from "../../components/ui/Select";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 const UserEditTask = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [taskData, setTaskData] = useState(null);
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState("Not Started");
   const [comments, setComments] = useState("");
-  const [parsedDate, setParsedDate] = useState("");
+  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { id } = useParams();
 
   useEffect(() => {
     setLoading(true);
     axios
       .get(`${BACKEND_URL}/api/v1/user/bulktask/${id}`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
+        headers: { Authorization: localStorage.getItem("token") },
       })
-      .then((response) => setTaskData(response.data))
-      .catch(() => {
-        setErrorMessage("Error fetching task data.");
+      .then((response) => {
+        setTaskData(response.data);
+        setDescription(response.data.description || "");
+        setDueDate(response.data.dueDate ? response.data.dueDate.slice(0, 10) : "");
+        setStatus(response.data.status || "Not Started");
+        setComments(response.data.comments || "");
       })
+      .catch((error) => console.error("Error fetching task:", error))
       .finally(() => setLoading(false));
   }, [id]);
-
-  useEffect(() => {
-    if (dueDate) {
-      setParsedDate(dueDate.slice(0, 10));
-    }
-  }, [dueDate]);
-
-  useEffect(() => {
-    if (taskData) {
-      setDescription(taskData.description || "");
-      setDueDate(taskData.dueDate || "");
-      setStatus(taskData.status || "Not Started");
-      setComments(taskData.comments || "");
-    }
-  }, [taskData]);
 
   const handleSubmit = async () => {
     setLoading(true);
     setSuccessMessage("");
     setErrorMessage("");
-
-    axios
-      .put(
+    try {
+      await axios.put(
         `${BACKEND_URL}/api/v1/user/taskupdate`,
         {
           taskId: parseInt(id),
@@ -71,110 +52,103 @@ const UserEditTask = () => {
           status,
           comments,
         },
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        },
-      )
-      .then(() => {
-        setSuccessMessage("Task updated successfully!");
-      })
-      .catch(() => {
-        setErrorMessage("Error updating task.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+        { headers: { Authorization: localStorage.getItem("token") } },
+      );
+      setSuccessMessage("Task updated successfully!");
+      setTimeout(() => navigate(-1), 1000);
+    } catch (error) {
+      setErrorMessage("Error updating task.");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  if (loading && !taskData)
+    return (
+      <div className="container mx-auto p-4">
+        <HomeShimmer />
+      </div>
+    );
+
   return (
-    <Box
-      sx={{
-        maxWidth: 600,
-        margin: "auto",
-        padding: 3,
-        backgroundColor: "#fff",
-        boxShadow: 3,
-        borderRadius: 2,
-      }}
-    >
-      {taskData ? (
-        <>
-          <div className="text-2xl font-bold text-center mb-4">
-            {taskData.user ? taskData.user.name : "Loading..."}
+    <div className="container mx-auto px-4 py-10 flex items-center justify-center min-h-[80vh]">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg">
+        <Card className="border-white/10 relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute left-4 top-4 text-muted-foreground"
+            onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          </Button>
+
+          <div className="text-center mb-8 mt-6">
+            <h1 className="text-2xl font-bold text-white">Update Status</h1>
+            <p className="text-muted-foreground mt-2">
+              User: <span className="text-primary font-medium">{taskData?.user?.name}</span>
+            </p>
           </div>
 
-          {successMessage && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {successMessage}
-            </Alert>
-          )}
-          {errorMessage && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {errorMessage}
-            </Alert>
-          )}
+          <div className="space-y-4">
+            {successMessage && (
+              <div className="p-3 bg-green-500/10 text-green-400 rounded-lg text-sm border border-green-500/20">
+                {successMessage}
+              </div>
+            )}
+            {errorMessage && (
+              <div className="p-3 bg-red-500/10 text-red-400 rounded-lg text-sm border border-red-500/20">
+                {errorMessage}
+              </div>
+            )}
 
-          <TextField
-            label="Description"
-            value={description}
-            disabled
-            fullWidth
-            margin="normal"
-            variant="outlined"
-          />
+            <Input
+              label="Description"
+              value={description}
+              disabled
+              className="opacity-70"
+            />
 
-          <TextField
-            label="Due Date"
-            value={parsedDate}
-            disabled
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            type="date"
-          />
+            <Input
+              label="Due Date"
+              type="date"
+              value={dueDate}
+              disabled
+              className="opacity-70"
+            />
 
-          <TextField
-            label="Comments"
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            multiline
-            rows={1}
-          />
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Status</InputLabel>
             <Select
+              label="Status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              label="Status"
-            >
-              <MenuItem value="Not Started">Not Started</MenuItem>
-              <MenuItem value="In Progress">In Progress</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-            </Select>
-          </FormControl>
+              options={[
+                { value: "Not Started", label: "Not Started" },
+                { value: "In Progress", label: "In Progress" },
+                { value: "Completed", label: "Completed" },
+              ]}
+            />
 
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            fullWidth
-            sx={{ marginTop: 3 }}
-            disabled={loading}
-            startIcon={loading && <CircularProgress size={20} />}
-          >
-            {loading ? "Updating..." : "Update Task"}
-          </Button>
-        </>
-      ) : (
-        <ShimmerForm />
-      )}
-    </Box>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground ml-1">Comments</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-lg border border-input bg-white/5 px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </div>
+
+            <Button
+              className="w-full mt-4"
+              onClick={handleSubmit}
+              disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Update Task"}
+            </Button>
+          </div>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 

@@ -1,209 +1,179 @@
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  MenuItem,
-  Select,
-  TextField,
-} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import ShimmerForm from "../../components/ShimmerForm";
+import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils";
+import HomeShimmer from "../../components/HomeShimmer";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
+import { Select } from "../../components/ui/Select";
+import { Loader2, ArrowLeft, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const AdminEditTask = () => {
-  const [userTaskData, setUserTaskData] = useState({});
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [userTaskData, setUserTaskData] = useState(null);
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState("Not Started");
   const [comments, setComments] = useState("");
-  const [parsedDate, setParsedDate] = useState("");
-  const [taskId, setTaskId] = useState(undefined);
+  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { id } = useParams();
-
-  useEffect(() => {
-    if (dueDate) {
-      setParsedDate(dueDate.slice(0, 10));
-    }
-  }, [dueDate]);
 
   useEffect(() => {
     setLoading(true);
     axios
       .get(`${BACKEND_URL}/api/v1/admin/task/${id}`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
+        headers: { Authorization: localStorage.getItem("token") },
       })
-      .then((response) => setUserTaskData(response.data))
-      .catch((error) => {
-        setErrorMessage("Error fetching task data.");
-        console.error("Error fetching task data:", error);
+      .then((response) => {
+        setUserTaskData(response.data);
+        setDescription(response.data.description || "");
+        setDueDate(response.data.dueDate ? response.data.dueDate.slice(0, 10) : "");
+        setStatus(response.data.status || "Not Started");
+        setComments(response.data.comments || "");
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .catch((error) => console.error("Error fetching task:", error))
+      .finally(() => setLoading(false));
   }, [id]);
-
-  useEffect(() => {
-    setDescription(userTaskData.description || "");
-    setDueDate(userTaskData.dueDate || "");
-    setStatus(userTaskData.status || "Not Started");
-    setComments(userTaskData.comments || "");
-    setTaskId(userTaskData.id || "");
-  }, [userTaskData]);
-
-  const deleteTask = async () => {
-    setLoading(true);
-    axios
-      .delete(`${BACKEND_URL}/api/v1/admin/delete`, {
-        data: {
-          taskId,
-        },
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
-      })
-      .then(() => {
-        setSuccessMessage("Task deleted successfully!");
-        setErrorMessage("");
-      })
-      .catch(() => {
-        setErrorMessage("Error deleting task.");
-        setSuccessMessage("");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
 
   const handleSubmit = async () => {
     setLoading(true);
-    axios
-      .put(
+    try {
+      await axios.put(
         `${BACKEND_URL}/api/v1/admin/admincomment`,
         {
           taskId: parseInt(id),
           usersId: userTaskData.userId,
           comment: comments,
         },
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        },
-      )
-      .then(() => {
-        setSuccessMessage("Task updated successfully!");
-        setErrorMessage("");
-      })
-      .catch(() => {
-        setErrorMessage("Error updating task.");
-        setSuccessMessage("");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+        { headers: { Authorization: localStorage.getItem("token") } },
+      );
+      setSuccessMessage("Task updated successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      setErrorMessage("Error updating task.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const nameCapital = (name) => {
-    return name.toUpperCase() || "Loading...";
+  const deleteTask = async () => {
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+
+    setLoading(true);
+    try {
+      await axios.delete(`${BACKEND_URL}/api/v1/admin/delete`, {
+        data: { taskId: userTaskData.id },
+        headers: { Authorization: localStorage.getItem("token") },
+      });
+      navigate(-1);
+    } catch (error) {
+      setErrorMessage("Error deleting task.");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading && !userTaskData)
+    return (
+      <div className="container mx-auto p-4">
+        <HomeShimmer />
+      </div>
+    );
 
   return (
-    <Box mx="auto" mt={5} maxWidth="sm" p={3} boxShadow={3} borderRadius={2}>
-      {userTaskData ? (
-        <>
-          <div className="mb-2 font-bold text-3xl text-center">
-            {userTaskData.user
-              ? nameCapital(userTaskData.user.name)
-              : "Loading..."}
+    <div className="container mx-auto px-4 py-10 flex items-center justify-center min-h-[80vh]">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg">
+        <Card className="border-white/10 relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute left-4 top-4 text-muted-foreground"
+            onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          </Button>
+
+          <div className="text-center mb-8 mt-6">
+            <h1 className="text-2xl font-bold text-white">Edit Task</h1>
+            <p className="text-muted-foreground mt-2">
+              User: <span className="text-primary font-medium">{userTaskData?.user?.name}</span>
+            </p>
           </div>
 
-          {successMessage && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {successMessage}
-            </Alert>
-          )}
-          {errorMessage && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {errorMessage}
-            </Alert>
-          )}
+          <div className="space-y-4">
+            {successMessage && (
+              <div className="p-3 bg-green-500/10 text-green-400 rounded-lg text-sm border border-green-500/20">
+                {successMessage}
+              </div>
+            )}
+            {errorMessage && (
+              <div className="p-3 bg-red-500/10 text-red-400 rounded-lg text-sm border border-red-500/20">
+                {errorMessage}
+              </div>
+            )}
 
-          <Box display="flex" flexDirection="column" gap={2}>
-            <div className="mb-2 font-semibold text-lg">
-              Email:
-              {userTaskData.user ? userTaskData.user.email : "Loading..."}
-            </div>
-
-            <TextField
+            <Input
               label="Description"
               value={description}
-              fullWidth
               disabled
+              className="opacity-70"
             />
 
-            <TextField
+            <Input
               label="Due Date"
               type="date"
-              value={parsedDate}
+              value={dueDate}
               disabled
-              fullWidth
-            />
-
-            <TextField
-              label="Comments"
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              fullWidth
-              multiline
-              rows={1}
+              className="opacity-70"
             />
 
             <Select
+              label="Status"
               value={status}
-              fullWidth
               disabled
-              displayEmpty
-              inputProps={{ readOnly: true }}
-            >
-              <MenuItem value="Not Started">Not Started</MenuItem>
-              <MenuItem value="In Progress">In Progress</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-            </Select>
+              className="opacity-70"
+              options={[
+                { value: "Not Started", label: "Not Started" },
+                { value: "In Progress", label: "In Progress" },
+                { value: "Completed", label: "Completed" },
+              ]}
+            />
 
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-              disabled={loading}
-              startIcon={loading && <CircularProgress size={20} />}
-            >
-              {loading ? "Updating..." : "Update Task"}
-            </Button>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground ml-1">Admin Comments</label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-lg border border-input bg-white/5 px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </div>
 
-            <Button
-              variant="contained"
-              color="error"
-              onClick={deleteTask}
-              disabled={loading}
-            >
-              {loading ? "Deleting..." : "Delete Task"}
-            </Button>
-          </Box>
-        </>
-      ) : (
-        <Box>
-          <ShimmerForm />
-        </Box>
-      )}
-    </Box>
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <Button
+                variant="danger"
+                onClick={deleteTask}
+                disabled={loading}
+                className="w-full">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full">
+                {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 

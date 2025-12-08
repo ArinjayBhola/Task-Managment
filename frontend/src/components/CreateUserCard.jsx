@@ -4,27 +4,16 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toggleCreateUser } from "../redux/slice/createUserSlice";
 import { BACKEND_URL } from "../utils";
-
-import CloseIcon from "@mui/icons-material/Close";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import {
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  InputAdornment,
-  TextField,
-} from "@mui/material";
+import { Modal } from "./ui/Modal";
+import { Input } from "./ui/Input";
+import { Button } from "./ui/Button";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const CreateUserCard = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [postError, setPostError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -34,17 +23,13 @@ const CreateUserCard = () => {
 
   const postUser = async () => {
     setLoading(true);
-    setPostError(false);
+    setErrorMessage("");
     setSuccessMessage("");
 
     try {
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/admin/usersignup`,
-        {
-          name,
-          email,
-          password,
-        },
+        { name, email, password },
         {
           headers: {
             Authorization: localStorage.getItem("token"),
@@ -53,10 +38,12 @@ const CreateUserCard = () => {
       );
       if (response.status === 200) {
         setSuccessMessage("User created successfully!");
-        navigate(`/user/${response.data.id}`);
+        setTimeout(() => {
+          navigate(`/user/${response.data.id}`);
+          dispatch(toggleCreateUser());
+        }, 1000);
       }
     } catch (error) {
-      setPostError(true);
       setErrorMessage(error.response?.data?.message || "Error creating user");
     } finally {
       setLoading(false);
@@ -64,90 +51,64 @@ const CreateUserCard = () => {
   };
 
   return (
-    <Dialog
-      open
+    <Modal
+      isOpen={true}
       onClose={() => dispatch(toggleCreateUser())}
-      PaperProps={{
-        sx: { width: "450px", maxWidth: "90%" },
-      }}
-    >
-      <DialogTitle>
-        Create User
-        <IconButton
-          aria-label="close"
-          onClick={() => dispatch(toggleCreateUser())}
-          sx={{ position: "absolute", right: 8, top: 8 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
+      title="Create New User">
+      <div className="space-y-4">
         {successMessage && (
-          <div className="text-center">
-            <div className="text-green-400">{successMessage}</div>
+          <div className="p-3 text-sm text-green-400 bg-green-400/10 border border-green-400/20 rounded-md">
+            {successMessage}
           </div>
         )}
 
-        {postError && (
-          <div className="text-center">
-            <div className="text-red-600">{errorMessage}</div>
+        {errorMessage && (
+          <div className="p-3 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-md">
+            {errorMessage}
           </div>
         )}
 
-        <TextField
-          fullWidth
+        <Input
           label="Name"
-          variant="outlined"
-          margin="normal"
+          placeholder="John Doe"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          size="small"
         />
-        <TextField
-          fullWidth
+
+        <Input
           label="Email"
           type="email"
-          variant="outlined"
-          margin="normal"
+          placeholder="john@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          size="small"
         />
-        <TextField
-          fullWidth
-          label="Password"
-          type={isPasswordVisible ? "text" : "password"}
-          variant="outlined"
-          margin="normal"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          size="small"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                  edge="end"
-                >
-                  {isPasswordVisible ? <Visibility /> : <VisibilityOff />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          variant="contained"
-          fullWidth
-          color="primary"
-          onClick={postUser}
-          disabled={loading}
-          startIcon={loading && <CircularProgress size={20} />}
-          sx={{ mt: 2 }}
-        >
-          {loading ? "Creating..." : "Create User"}
-        </Button>
-      </DialogContent>
-    </Dialog>
+
+        <div className="relative">
+          <Input
+            label="Password"
+            type={isPasswordVisible ? "text" : "password"}
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+            className="absolute right-3 top-[34px] text-muted-foreground hover:text-white transition-colors">
+            {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+
+        <div className="pt-2">
+          <Button
+            className="w-full"
+            onClick={postUser}
+            disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create User"}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 };
 
