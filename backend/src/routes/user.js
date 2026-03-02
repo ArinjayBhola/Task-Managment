@@ -3,7 +3,7 @@ import { sign, verify } from "hono/jwt";
 import { authentication } from "../middleware/auth";
 import { signinSchema } from "../utils";
 import { getDb } from "../db";
-import { users, tasks } from "../db/schema";
+import { users, tasks, organizationMembers } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 
 export const userRouter = new Hono();
@@ -36,14 +36,23 @@ userRouter.post("/signin", async (c) => {
 
 userRouter.get("/bulk", authentication, async (c) => {
   const db = getDb(c.env.DATABASE_URL);
+  const orgId = c.get("orgId");
+  
+  if (!orgId) {
+    return c.json({ error: "Organization ID is required" }, 400);
+  }
+
   try {
-    const authHeader = c.req.header("Authorization");
-    const decodedValue = await verify(authHeader, c.env.JWT_SECRET);
-    const { id } = decodedValue;
+    const payload = c.get("jwtPayload");
+    const { id } = payload;
+    
+    // Fetch the user and only tasks assigned to them within the current organization
     const userTasks = await db.query.users.findMany({
       where: eq(users.id, id),
       with: {
-        tasks: true,
+        tasksAssigned: {
+          where: eq(tasks.organizationId, orgId)
+        },
       },
     });
     return c.json(userTasks);
@@ -79,13 +88,28 @@ userRouter.put("/taskupdate", authentication, async (c) => {
 
 userRouter.get("/bulktask", authentication, async (c) => {
   const db = getDb(c.env.DATABASE_URL);
+  const orgId = c.get("orgId");
+  
+  if (!orgId) {
+    return c.json({ error: "Organization ID is required" }, 400);
+  }
+
   try {
-    const allUsers = await db.query.users.findMany({
+    // Fetch users in the org and their assigned tasks in the org
+    const members = await db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.organizationId, orgId),
       with: {
-        tasks: true,
+        user: {
+           with: {
+             tasksAssigned: {
+               where: eq(tasks.organizationId, orgId)
+             },
+           }
+        }
       },
     });
 
+    const allUsers = members.map(m => m.user);
     return c.json(allUsers);
   } catch (error) {
     return c.json({ error: "Error fetching tasks" }, 411);
@@ -94,12 +118,22 @@ userRouter.get("/bulktask", authentication, async (c) => {
 
 userRouter.get("/bulktask/:id", authentication, async (c) => {
   const db = getDb(c.env.DATABASE_URL);
+  const orgId = c.get("orgId");
+  
+  if (!orgId) {
+    return c.json({ error: "Organization ID is required" }, 400);
+  }
+
   try {
     const { id } = c.req.param();
     const task = await db.query.tasks.findFirst({
-      where: eq(tasks.id, parseInt(id)),
+      where: and(
+        eq(tasks.id, parseInt(id)),
+        eq(tasks.organizationId, orgId) // Ensure task belongs to the active org
+      ),
       with: {
-        user: true,
+        assignee: true,
+        creator: true
       },
     });
 
@@ -112,5 +146,30 @@ userRouter.get("/bulktask/:id", authentication, async (c) => {
   } catch (error) {
     console.error("Error querying the database:", error);
     return c.status(500).json({ msg: "Internal Server Error", error: error.message });
+  }
+});
+
+// NEW ENDPOINT: Get all organizations for the frontend switcher
+userRouter.get("/organizations", authentication, async (c) => {
+  const db = getDb(c.env.DATABASE_URL);
+  try {
+    const payload = c.get("jwtPayload");
+    const userOrgs = await db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.userId, payload.id),
+      with: {
+        organization: true
+      }
+    });
+
+    const orgs = userOrgs.map(m => ({
+      id: m.organization.id,
+      name: m.organization.name,
+      role: m.role
+    }));
+
+    return c.json(orgs);
+  } catch (error) {
+    console.error(error);
+    return c.json({ error: "Error fetching organizations" }, 500);
   }
 });

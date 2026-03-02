@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { BACKEND_URL } from "../../utils";
+import api from "../../utils/axiosInstance";
 import { motion } from "framer-motion";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
@@ -25,13 +24,19 @@ const UserSignin = () => {
     try {
       setIsLoading(true);
       setError("");
-      const response = await axios.post(
-        `${BACKEND_URL}/api/v1/user/signin`,
-        { email, password },
-        { headers: { "Content-Type": "application/json" } },
-      );
+      
+      const response = await api.post("/user/signin", { email, password });
+      
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        
+        // Fetch User's Organizations and set active UI token
+        const orgRes = await api.get("/user/organizations");
+        
+        if (orgRes.data && orgRes.data.length > 0) {
+          localStorage.setItem("activeOrgId", orgRes.data[0].id);
+        }
+
         navigate("/usertasks");
       }
     } catch (error) {

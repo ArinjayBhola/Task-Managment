@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils";
@@ -24,10 +24,8 @@ const UserEditTask = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios
-      .get(`${BACKEND_URL}/api/v1/user/bulktask/${id}`, {
-        headers: { Authorization: localStorage.getItem("token") },
-      })
+    api
+      .get(`/user/bulktask/${id}`)
       .then((response) => {
         setTaskData(response.data);
         setDescription(response.data.description || "");
@@ -44,16 +42,12 @@ const UserEditTask = () => {
     setSuccessMessage("");
     setErrorMessage("");
     try {
-      await axios.put(
-        `${BACKEND_URL}/api/v1/user/taskupdate`,
-        {
-          taskId: parseInt(id),
-          id: taskData.user.id,
-          status,
-          comments,
-        },
-        { headers: { Authorization: localStorage.getItem("token") } },
-      );
+      await api.put(`/user/taskupdate`, {
+        taskId: parseInt(id),
+        id: taskData.user.id,
+        status,
+        comments,
+      });
       setSuccessMessage("Task updated successfully!");
       setTimeout(() => navigate(-1), 1000);
     } catch (error) {

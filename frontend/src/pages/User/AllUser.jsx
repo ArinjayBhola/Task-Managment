@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useEffect, useState } from "react";
 import HomeShimmer from "../../components/HomeShimmer";
 import UserTaskCard from "../../components/UserTaskCard";
@@ -10,12 +10,8 @@ const AllUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`${BACKEND_URL}/api/v1/user/bulktask`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
-      })
+    api
+      .get(`/user/bulktask`)
       .then((response) => {
         setUserTask(response.data);
       })

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../utils/axiosInstance";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -27,15 +27,7 @@ const CreateUserCard = () => {
     setSuccessMessage("");
 
     try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/v1/admin/usersignup`,
-        { name, email, password },
-        {
-          headers: {
-            Authorization: localStorage.getItem("token"),
-          },
-        },
-      );
+      const response = await api.post(`/admin/usersignup`, { name, email, password });
       if (response.status === 200) {
         setSuccessMessage("User created successfully!");
         setTimeout(() => {

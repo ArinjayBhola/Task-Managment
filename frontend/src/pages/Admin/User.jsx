@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -23,11 +23,7 @@ const User = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/v1/admin/bulk`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
-      });
+      const response = await api.get("/admin/bulk");
       setData(response.data);
     } catch (e) {
       console.error(e);

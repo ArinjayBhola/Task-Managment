@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils";
@@ -23,10 +23,8 @@ const CreateNewTask = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    axios
-      .get(`${BACKEND_URL}/api/v1/admin/${id}`, {
-        headers: { Authorization: localStorage.getItem("token") },
-      })
+    api
+      .get(`/admin/${id}`)
       .then((response) => setUserData(response.data))
       .catch((error) => console.error("Error fetching user data:", error));
   }, [id]);
@@ -37,11 +35,7 @@ const CreateNewTask = () => {
     setErrorMessage("");
 
     try {
-      await axios.post(
-        `${BACKEND_URL}/api/v1/admin/task`,
-        { description, dueDate, status, id: parseInt(id), comments },
-        { headers: { Authorization: localStorage.getItem("token") } },
-      );
+      await api.post(`/admin/task`, { description, dueDate, status, id: parseInt(id), comments });
       setSuccessMessage("Task created successfully!");
       setTimeout(() => navigate(-1), 1000);
     } catch (error) {

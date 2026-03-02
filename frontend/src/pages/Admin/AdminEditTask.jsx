@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../../utils";
@@ -24,10 +24,8 @@ const AdminEditTask = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios
-      .get(`${BACKEND_URL}/api/v1/admin/task/${id}`, {
-        headers: { Authorization: localStorage.getItem("token") },
-      })
+    api
+      .get(`/admin/task/${id}`)
       .then((response) => {
         setUserTaskData(response.data);
         setDescription(response.data.description || "");
@@ -42,15 +40,11 @@ const AdminEditTask = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await axios.put(
-        `${BACKEND_URL}/api/v1/admin/admincomment`,
-        {
-          taskId: parseInt(id),
-          usersId: userTaskData.userId,
-          comment: comments,
-        },
-        { headers: { Authorization: localStorage.getItem("token") } },
-      );
+      await api.put(`/admin/admincomment`, {
+        taskId: parseInt(id),
+        usersId: userTaskData.userId,
+        comment: comments,
+      });
       setSuccessMessage("Task updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
@@ -65,9 +59,8 @@ const AdminEditTask = () => {
 
     setLoading(true);
     try {
-      await axios.delete(`${BACKEND_URL}/api/v1/admin/delete`, {
+      await api.delete(`/admin/delete`, {
         data: { taskId: userTaskData.id },
-        headers: { Authorization: localStorage.getItem("token") },
       });
       navigate(-1);
     } catch (error) {

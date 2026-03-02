@@ -1,5 +1,5 @@
 import { Button } from "../../components/ui/Button";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -28,8 +28,8 @@ const SingleUser = () => {
   }, []);
 
   useEffect(() => {
-    axios
-      .get(`${BACKEND_URL}/api/v1/admin/user/${userId}`)
+    api
+      .get(`/admin/user/${userId}`)
       .then((response) => {
         setUserData(response.data);
       })

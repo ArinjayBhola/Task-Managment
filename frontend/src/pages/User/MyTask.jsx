@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import { useEffect, useState } from "react";
 import HomeShimmer from "../../components/HomeShimmer";
 import TaskDetails from "../../components/TaskDetails";
@@ -12,12 +12,8 @@ const MyTask = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`${BACKEND_URL}/api/v1/user/bulk`, {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
-      })
+    api
+      .get(`/user/bulk`)
       .then((response) => {
         setUserData(response.data);
       })

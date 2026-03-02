@@ -3,7 +3,7 @@ import { sign } from "hono/jwt";
 import { authentication } from "../middleware/auth";
 import { signinSchema, signupSchema, taskSchema } from "../utils";
 import { getDb } from "../db";
-import { admins, users, tasks } from "../db/schema";
+import { admins, users, tasks, organizations, organizationMembers } from "../db/schema";
 import { eq, and, ilike } from "drizzle-orm";
 
 export const adminRouter = new Hono();
@@ -29,7 +29,7 @@ adminRouter.post("/signup", async (c) => {
       .returning();
 
     const token = await sign(
-      { id: signupAdmin.id, email: signupAdmin.email, role: signupAdmin.role },
+      { id: signupAdmin.id, email: signupAdmin.email, role: signupAdmin.role || "Admin" },
       c.env.JWT_SECRET,
     );
     return c.json({ token });
@@ -69,10 +69,13 @@ adminRouter.post("/signin", async (c) => {
 
 adminRouter.get("/bulk", authentication, async (c) => {
   const db = getDb(c.env.DATABASE_URL);
+
   try {
+    // Admins see all users and all tasks
     const allUsers = await db.query.users.findMany({
       with: {
-        tasks: true,
+        tasksAssigned: true,
+        tasksCreated: true,
       },
     });
 
@@ -80,8 +83,10 @@ adminRouter.get("/bulk", authentication, async (c) => {
       c.status(411);
       return c.json({ error: "Users not found" });
     }
+
     return c.json(allUsers);
   } catch (error) {
+    console.error(error);
     return c.json({ error: "Error fetching users" }, 411);
   }
 });
@@ -112,6 +117,7 @@ adminRouter.get("/:userId", authentication, async (c) => {
 
 adminRouter.post("/task", authentication, async (c) => {
   const db = getDb(c.env.DATABASE_URL);
+
   const createUTCDate = (dateString) => {
     const [year, month, day] = dateString.split("-").map(Number);
     return new Date(Date.UTC(year, month - 1, day));
@@ -131,8 +137,19 @@ adminRouter.post("/task", authentication, async (c) => {
     const { description, dueDate, status, id, comments } = parsedBody.data;
     const parsedDueDate = createUTCDate(dueDate);
 
+    // Find the primary organization for the user we are assigning to
+    const userOrg = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, id)
+    });
+
+    if (!userOrg) {
+       return c.json({ error: "Target user is not a member of any organization." }, 400);
+    }
+
     await db.insert(tasks).values({
-      userId: id,
+      organizationId: userOrg.organizationId,
+      userId: c.get("jwtPayload").id, // The creator is the currently authenticated admin
+      assignedTo: id, // id from the payload is actually the assigned user
       description,
       status,
       dueDate: parsedDueDate,
@@ -156,18 +173,39 @@ adminRouter.post("/usersignup", authentication, async (c) => {
   }
   const { name, email, password } = body;
   try {
-    const [signupUser] = await db
-      .insert(users)
-      .values({
-        name,
-        email,
-        password,
-      })
-      .returning();
+    const dbResult = await db.transaction(async (tx) => {
+      // 1. Create the user
+      const [signupUser] = await tx
+        .insert(users)
+        .values({
+          name,
+          email,
+          password,
+        })
+        .returning();
 
-    const token = await sign({ id: signupUser.id, email: signupUser.email }, c.env.JWT_SECRET);
-    return c.json({ id: signupUser.id });
+      // 2. Create a default organization for the user
+      const [newOrg] = await tx
+        .insert(organizations)
+        .values({
+          name: `${name}'s Workspace`,
+        })
+        .returning();
+
+      // 3. Add the user as the OWNER of the new organization
+      await tx.insert(organizationMembers).values({
+        organizationId: newOrg.id,
+        userId: signupUser.id,
+        role: "OWNER",
+      });
+
+      return { user: signupUser, org: newOrg };
+    });
+
+    const token = await sign({ id: dbResult.user.id, email: dbResult.user.email }, c.env.JWT_SECRET);
+    return c.json({ id: dbResult.user.id, defaultOrgId: dbResult.org.id, token });
   } catch (error) {
+    console.error(error);
     return c.json({ error: "Error creating user" }, 411);
   }
 });

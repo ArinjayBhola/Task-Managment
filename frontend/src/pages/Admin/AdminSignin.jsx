@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { BACKEND_URL } from "../../utils";
+import api from "../../utils/axiosInstance";
 import { motion } from "framer-motion";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
@@ -25,13 +24,13 @@ const AdminSignin = () => {
     try {
       setIsLoading(true);
       setError("");
-      const response = await axios.post(
-        `${BACKEND_URL}/api/v1/admin/signin`,
-        { email, password },
-        { headers: { "Content-Type": "application/json" } },
-      );
+      // 1. Authenticate user
+      const response = await api.post("/admin/signin", { email, password });
+      
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        localStorage.removeItem("activeOrgId"); // Admins don't use workspaces
+
         navigate("/users");
       }
     } catch (error) {
