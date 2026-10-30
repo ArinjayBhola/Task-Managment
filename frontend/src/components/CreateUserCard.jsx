@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toggleCreateUser } from "../redux/slice/createUserSlice";
-import { BACKEND_URL } from "../utils";
 import { Modal } from "./ui/Modal";
 import { Input } from "./ui/Input";
 import { Button } from "./ui/Button";
@@ -28,7 +27,7 @@ const CreateUserCard = () => {
 
     try {
       const response = await api.post(`/admin/usersignup`, { name, email, password });
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         setSuccessMessage("User created successfully!");
         setTimeout(() => {
           navigate(`/user/${response.data.id}`);
@@ -36,7 +35,7 @@ const CreateUserCard = () => {
         }, 1000);
       }
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || "Error creating user");
+      setErrorMessage(error.response?.data?.message || error.response?.data?.error || "Error creating user. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -49,13 +48,13 @@ const CreateUserCard = () => {
       title="Create New User">
       <div className="space-y-4">
         {successMessage && (
-          <div className="p-3 text-sm text-green-400 bg-green-400/10 border border-green-400/20 rounded-md">
+          <div className="p-3 text-sm text-green-700 dark:text-green-400 bg-green-500/10 border border-green-500/20 rounded-md">
             {successMessage}
           </div>
         )}
 
         {errorMessage && (
-          <div className="p-3 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-md">
+          <div role="alert" className="p-3 text-sm text-red-700 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-md">
             {errorMessage}
           </div>
         )}
@@ -75,21 +74,23 @@ const CreateUserCard = () => {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <div className="relative">
           <Input
             label="Password"
             type={isPasswordVisible ? "text" : "password"}
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          />
+            endAdornment={
           <button
             type="button"
             onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-            className="absolute right-3 top-[34px] text-muted-foreground hover:text-white transition-colors">
+            aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+            aria-pressed={isPasswordVisible}
+            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors">
             {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
-        </div>
+            }
+          />
 
         <div className="pt-2">
           <Button

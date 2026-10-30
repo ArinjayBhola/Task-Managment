@@ -11,7 +11,7 @@ api.interceptors.request.use(
     const orgId = localStorage.getItem("activeOrgId");
 
     if (token) {
-      config.headers.Authorization = token;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     if (orgId) {

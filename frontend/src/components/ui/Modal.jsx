@@ -30,12 +30,16 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#0f172a] shadow-2xl pointer-events-auto">
-              <div className="flex items-center justify-between border-b border-white/10 p-4">
-                <h2 className="text-lg font-semibold text-white">{title}</h2>
+              role="dialog"
+              aria-modal="true"
+              aria-label={title}
+              className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border border-border bg-background text-foreground shadow-2xl pointer-events-auto">
+              <div className="flex items-center justify-between border-b border-border p-4">
+                <h2 className="text-lg font-semibold text-foreground">{title}</h2>
                 <button
                   onClick={onClose}
-                  className="rounded-full p-1 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors">
+                  aria-label="Close dialog"
+                  className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>

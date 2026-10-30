@@ -23,8 +23,8 @@ const WelcomePage = () => {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground flex flex-col">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/20 blur-[100px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-400/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-400/10 blur-[100px]" />
       </div>
 
       <nav className="relative z-50 flex items-center justify-between px-8 py-6 w-full max-w-7xl mx-auto">
@@ -33,7 +33,7 @@ const WelcomePage = () => {
         </div>
       </nav>
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 pt-8 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -43,14 +43,14 @@ const WelcomePage = () => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm text-sm font-medium text-blue-200 mb-4">
-            <Zap className="w-4 h-4 fill-blue-400 text-blue-400" />
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-sm text-sm font-medium text-blue-700 dark:text-blue-300 mb-4">
+            <Zap className="w-4 h-4 fill-current" />
             <span>Manage tasks at lightspeed</span>
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white leading-tight">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground leading-tight">
             Master Your Workflow <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
               One Task at a Time.
             </span>
           </h1>
@@ -65,7 +65,7 @@ const WelcomePage = () => {
               <Button
                 size="lg"
                 className="gap-2 group">
-                <ShieldCheck className="w-5 h-5 group-hover:text-black transition-colors" />
+                <ShieldCheck className="w-5 h-5" />
                 Admin Portal
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
@@ -102,9 +102,9 @@ const WelcomePage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + idx * 0.1 }}
               viewport={{ once: true }}
-              className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors text-left">
+              className="p-6 rounded-2xl bg-background/80 border border-border backdrop-blur-sm hover:bg-accent transition-colors text-left">
               <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-bold mb-2 text-white">{feature.title}</h3>
+              <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.desc}</p>
             </motion.div>
           ))}

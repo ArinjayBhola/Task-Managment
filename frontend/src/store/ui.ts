@@ -1,0 +1,15 @@
+import { create } from "zustand";
+
+interface UIState {
+  isSidebarOpen: boolean;
+  isCommandPaletteOpen: boolean;
+  toggleSidebar: () => void;
+  setCommandPaletteOpen: (open: boolean) => void;
+}
+
+export const useUIStore = create<UIState>((set) => ({
+  isSidebarOpen: true,
+  isCommandPaletteOpen: false,
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
+}));

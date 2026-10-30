@@ -57,7 +57,7 @@ const SingleUser = () => {
       <Card className="border-white/10 bg-card/30 p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">{userData.name}</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{userData.name}</h1>
             <p className="text-muted-foreground">Managing {userData.tasks?.length || 0} tasks</p>
           </div>
 

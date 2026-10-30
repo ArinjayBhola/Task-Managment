@@ -30,7 +30,7 @@ const UserTaskCard = ({ user }) => {
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
             <UserCircle className="w-6 h-6" />
           </div>
-          <div className="text-xl font-bold text-white">
+          <div className="text-xl font-bold text-foreground">
             {userRole === "Admin" ? (
               <Link
                 to={`/user/${user.id}`}

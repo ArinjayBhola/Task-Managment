@@ -39,7 +39,7 @@ const User = () => {
       {selector && <CreateUserCard />}
 
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-white">User Management</h1>
+        <h1 className="text-3xl font-bold text-foreground">User Management</h1>
         <Button
           onClick={() => dispatch(toggleCreateUser())}
           className="md:hidden rounded-full w-12 h-12 p-0 flex items-center justify-center fixed bottom-6 right-6 z-40 shadow-2xl">

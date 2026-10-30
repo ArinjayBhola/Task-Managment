@@ -40,7 +40,7 @@ const UserSignin = () => {
         navigate("/usertasks");
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || "An error occurred";
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || "An error occurred";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -57,12 +57,12 @@ const UserSignin = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md z-10">
-        <Card className="border-white/10 shadow-2xl">
+        <Card className="border-border shadow-2xl">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 mb-4">
               <UserCircle2 className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
+            <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
             <p className="text-muted-foreground mt-2">Sign in to your account</p>
           </div>
 
@@ -74,21 +74,23 @@ const UserSignin = () => {
               onChange={(e) => setEmail(e.target.value)}
             />
 
-            <div className="relative">
               <Input
                 label="Password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-              />
+                endAdornment={
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[34px] text-muted-foreground hover:text-white transition-colors">
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors">
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </div>
+                }
+              />
 
             {error && (
               <motion.div
