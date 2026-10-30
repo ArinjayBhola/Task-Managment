@@ -16,6 +16,7 @@ import {
 import Brand from "./Brand";
 import { ThemeToggle } from "./ThemeProvider";
 import api from "../utils/axiosInstance";
+import { Select } from "./ui/Select";
 
 export default function Header() {
   const location = useLocation();
@@ -32,19 +33,30 @@ export default function Header() {
   const email = account.email || (admin ? "Administrator" : "Team member");
   const home = admin ? "/users" : "/mytasks";
   const links = admin
-    ? [{ to: "/users", label: "Team overview", icon: LayoutDashboard }]
+    ? [
+        { to: "/users", label: "Team management", icon: Users },
+        {
+          to: "/admin/tasks",
+          label: "Task assignments",
+          icon: LayoutDashboard,
+        },
+      ]
     : [
         { to: "/mytasks", label: "My tasks", icon: ListTodo },
-        { to: "/usertasks", label: "Team overview", icon: Users },
+        { to: "/usertasks", label: "Team activity", icon: Users },
       ];
   const active =
     location.pathname === "/mytasks"
       ? "My tasks"
-      : location.pathname === "/users" || location.pathname === "/usertasks"
-        ? "Team overview"
-        : location.pathname.startsWith("/user/")
-          ? "Team member"
-          : "Task details";
+      : location.pathname === "/users"
+        ? "Team management"
+        : location.pathname === "/admin/tasks"
+          ? "Task assignments"
+          : location.pathname === "/usertasks"
+            ? "Team activity"
+            : location.pathname.startsWith("/user/")
+              ? "Team member"
+              : "Task details";
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
@@ -103,14 +115,14 @@ export default function Header() {
           </div>
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">
-              {admin ? "Admin workspace" : "Team workspace"}
+              {admin ? "Admin console" : "My workspace"}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {admin ? "Manage & organize" : "Focus & collaborate"}
+              {admin ? "People, access & delivery" : "My tasks & progress"}
             </p>
           </div>
         </div>
-        <p className="eyebrow px-6 pb-3">Workspace</p>
+        <p className="eyebrow px-6 pb-3">{admin ? "Management" : "My work"}</p>
         <nav className="space-y-1 px-3">
           {links.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -127,25 +139,19 @@ export default function Header() {
         </nav>
         {organizations.length > 0 && (
           <div className="mx-4 mt-6">
-            <label htmlFor="workspace-select" className="eyebrow mb-2 block">
-              Your workspace
-            </label>
-            <select
+            <Select
               id="workspace-select"
-              aria-label="Active workspace"
-              className="field !py-2 text-xs"
+              label="Active workspace"
               value={localStorage.getItem("activeOrgId") || organizations[0].id}
               onChange={(event) => {
                 localStorage.setItem("activeOrgId", event.target.value);
                 window.location.reload();
               }}
-            >
-              {organizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
-                </option>
-              ))}
-            </select>
+              options={organizations.map((org) => ({
+                value: org.id,
+                label: org.name,
+              }))}
+            />
           </div>
         )}
         <div className="mx-4 mt-auto mb-5 rounded-xl border border-border bg-background p-4">
@@ -195,7 +201,7 @@ export default function Header() {
             to={home}
             className="hidden text-xs text-muted-foreground sm:block"
           >
-            Workspace
+            {admin ? "Administration" : "My workspace"}
           </Link>
           <ChevronRight
             size={13}
@@ -204,6 +210,10 @@ export default function Header() {
           <span className="text-xs font-medium">{active}</span>
         </div>
         <div className="flex items-center gap-4">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+            {admin ? <ShieldCheck size={12} /> : <Users size={12} />}
+            {admin ? "Admin" : "Member"}
+          </span>
           <span className="hidden text-xs text-muted-foreground md:block">
             {new Intl.DateTimeFormat("en", {
               weekday: "short",

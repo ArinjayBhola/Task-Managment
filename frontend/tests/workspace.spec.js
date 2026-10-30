@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { Buffer } from "node:buffer";
+import dayjs from "dayjs";
 
 const tasks = [
   {
@@ -107,7 +108,7 @@ for (const theme of ["light", "dark"]) {
     await setup(page, { role: "Admin", theme });
     await page.goto("/users");
     await expect(
-      page.getByRole("heading", { name: "Your team, in focus." }),
+      page.getByRole("heading", { name: "Team management" }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Alex Morgan", exact: true }),
@@ -167,9 +168,7 @@ for (const theme of ["light", "dark"]) {
   }, testInfo) => {
     await setup(page, { role: "User", theme });
     await page.goto("/mytasks");
-    await expect(
-      page.getByRole("heading", { name: "Make room for good work." }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "My tasks" })).toBeVisible();
     await expect(
       page.getByText("Shape the new onboarding experience", { exact: true }),
     ).toBeVisible();
@@ -231,10 +230,7 @@ for (const role of ["Admin", "User"]) {
     await page.goto(role === "Admin" ? "/users" : "/mytasks");
     await expect(
       page.getByRole("heading", {
-        name:
-          role === "Admin"
-            ? "Your team, in focus."
-            : "Make room for good work.",
+        name: role === "Admin" ? "Team management" : "My tasks",
       }),
     ).toBeVisible();
     await noOverflow(page);
@@ -244,7 +240,11 @@ for (const role of ["Admin", "User"]) {
     });
     await page.getByRole("button", { name: "Open menu" }).click();
     await expect(
-      page.getByRole("navigation").getByRole("link", { name: "Team overview" }),
+      page
+        .getByRole("navigation")
+        .getByRole("link", {
+          name: role === "Admin" ? "Team management" : "Team activity",
+        }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Close menu", exact: true }).click();
     if (role === "Admin") {
@@ -278,3 +278,114 @@ for (const role of ["Admin", "User"])
     await page.getByLabel("Password", { exact: true }).press("Enter");
     await expect(page).toHaveURL(role === "Admin" ? /\/users$/ : /\/mytasks$/);
   });
+
+for (const theme of ["light", "dark"]) {
+  test(`MUI dropdowns, calendar, and assignment filters in ${theme} mode`, async ({
+    page,
+  }, testInfo) => {
+    await setup(page, { role: "Admin", theme });
+    await page.goto("/admin/tasks");
+    await expect(
+      page.getByRole("heading", { name: "Task assignments", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("combobox", { name: "Assignment status" }).click();
+    await page
+      .getByRole("option", { name: "In progress", exact: true })
+      .click();
+    await expect(
+      page.getByText("Shape the new onboarding experience", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Share the discovery notes", { exact: true }),
+    ).toHaveCount(0);
+    await page.getByRole("combobox", { name: "Assigned member" }).click();
+    await page.getByRole("option", { name: "Sam Taylor", exact: true }).click();
+    await expect(
+      page.getByText("Make space for the next sprint", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Shape the new onboarding experience", { exact: true }),
+    ).toHaveCount(0);
+    await page.goto("/task/1");
+    await page
+      .getByLabel("What needs to get done?")
+      .fill("A task with a calendar date");
+    await page.getByRole("combobox", { name: "Status", exact: true }).click();
+    await page
+      .getByRole("option", { name: "In progress", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Choose date", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.locator('.MuiPickerPopper-paper')).toHaveCSS('opacity', '1');
+    await page.screenshot({
+      path: testInfo.outputPath(`mui-calendar-${theme}.png`),
+    });
+    await page.getByRole("gridcell", { name: "15", exact: true }).click();
+    const request = page.waitForRequest(
+      (request) =>
+        new URL(request.url()).pathname === "/api/v1/admin/task" &&
+        request.method() === "POST",
+    );
+    await page
+      .getByRole("button", { name: "Assign task", exact: true })
+      .click();
+    expect((await request).postDataJSON().dueDate).toBe(
+      dayjs().date(15).format("YYYY-MM-DD"),
+    );
+    await expect(page.getByRole("status")).toHaveText(
+      "Task assigned. A clear next step for your teammate.",
+    );
+    await noOverflow(page);
+  });
+}
+
+test("member workspace uses MUI switching and restricts administration routes", async ({
+  page,
+}) => {
+  await setup(page, { role: "User" });
+  await page.goto("/mytasks");
+  await expect(
+    page.getByRole("link", { name: "Task assignments", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "New team member", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Active workspace" }).click();
+  await expect(
+    page.getByRole("option", { name: "Everyday Studio", exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.goto("/admin/tasks");
+  await expect(page).toHaveURL(/\/mytasks$/);
+  await page.goto("/users");
+  await expect(page).toHaveURL(/\/mytasks$/);
+});
+
+test("admin console redirects member routes back to management", async ({
+  page,
+}) => {
+  await setup(page, { role: "Admin" });
+  await page.goto("/mytasks");
+  await expect(page).toHaveURL(/\/users$/);
+  await expect(
+    page.getByRole("link", { name: "Task assignments", exact: true }),
+  ).toBeVisible();
+});
+
+test.describe('MUI controls on a touch device', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  test('date dialog and status menu fit a mobile task form', async ({ page }) => {
+    await setup(page, { role: 'Admin', theme: 'dark' });
+    await page.goto('/task/1');
+    await page.getByRole('combobox', { name: 'Status', exact: true }).click();
+    await page.getByRole('option', { name: 'In progress', exact: true }).click();
+    await page.getByRole('button', { name: 'Choose date', exact: true }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('gridcell', { name: '15', exact: true }).click();
+    await page.getByRole('button', { name: 'OK', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await noOverflow(page);
+  });
+});

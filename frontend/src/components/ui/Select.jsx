@@ -1,7 +1,11 @@
 /* eslint-disable react/prop-types */
 import { useId } from "react";
-import { ChevronDown } from "lucide-react";
-import { twMerge } from "tailwind-merge";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MuiSelect from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormHelperText from "@mui/material/FormHelperText";
+
 export const Select = ({
   label,
   options = [],
@@ -13,30 +17,21 @@ export const Select = ({
   const generatedId = useId();
   const id = suppliedId || generatedId;
   return (
-    <div className="w-full space-y-2">
-      {label && (
-        <label htmlFor={id} className="block text-xs font-semibold">
-          {label}
-        </label>
-      )}
-      <div className="relative">
-        <select
-          id={id}
-          className={twMerge("field h-11 appearance-none pr-10", className)}
-          {...props}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={15}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-      </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
+    <FormControl fullWidth size="small" error={!!error} className={className}>
+      {label && <InputLabel id={`${id}-label`}>{label}</InputLabel>}
+      <MuiSelect
+        id={id}
+        labelId={label ? `${id}-label` : undefined}
+        label={label}
+        {...props}
+      >
+        {options.map((option) => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+      </MuiSelect>
+      {error && <FormHelperText>{error}</FormHelperText>}
+    </FormControl>
   );
 };

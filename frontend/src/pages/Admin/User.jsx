@@ -50,9 +50,9 @@ export default function User() {
     <div className="page-wrap">
       {showCreate && <CreateUserCard />}
       <PageHeading
-        eyebrow="The big picture"
-        title="Your team, in focus."
-        description="A little clarity for everyone. Keep your people and their priorities moving together."
+        eyebrow="Admin console · People & access"
+        title="Team management"
+        description="Create member accounts, assign work, and oversee delivery across your team."
         action={createButton}
       />
       {loading ? (

@@ -26,13 +26,13 @@ export default function MyTask() {
   return (
     <div className="page-wrap">
       <PageHeading
-        eyebrow="A little focus goes a long way"
-        title="Make room for good work."
-        description="Your priorities, all in one place. Take it one task at a time."
+        eyebrow="Member workspace · My work"
+        title="My tasks"
+        description="Your assignments, your progress, your next step. Focus on the work that’s yours."
         action={
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-[11px] text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Your personal workspace
+            Personal task view
           </span>
         }
       />

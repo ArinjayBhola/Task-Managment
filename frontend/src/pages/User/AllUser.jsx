@@ -26,9 +26,9 @@ export default function AllUser() {
   return (
     <div className="page-wrap">
       <PageHeading
-        eyebrow="Better, together"
-        title="One team. A shared direction."
-        description="See what everyone is working on and how the pieces come together."
+        eyebrow="Member workspace · Read-only overview"
+        title="Team activity"
+        description="Follow progress in your workspace. Manage your own assignments from My tasks."
       />
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2">

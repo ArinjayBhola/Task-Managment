@@ -39,7 +39,11 @@ export default function AuthPage({ role = "Admin", signup = false }) {
       />
     );
   const admin = role === "Admin";
-  const title = signup ? "Your team starts here." : "Good to see you again.";
+  const title = signup
+    ? "Your team starts here."
+    : admin
+      ? "Welcome back, admin."
+      : "Your work starts here.";
   async function submit(event) {
     event.preventDefault();
     setBusy(true);
@@ -79,14 +83,18 @@ export default function AuthPage({ role = "Admin", signup = false }) {
         <section className="relative hidden flex-col justify-between overflow-hidden rounded-2xl border border-border bg-accent p-10 lg:flex xl:p-14">
           <div>
             <p className="eyebrow !text-accent-foreground">
-              Good work. Clear direction.
+              {admin
+                ? "Admin console · Team operations"
+                : "Member workspace · Personal focus"}
             </p>
             <h1 className="mt-10 max-w-md text-[54px] font-medium leading-[1.09] tracking-[-2.5px]">
-              Big ideas.
+              {admin ? "Your team." : "Your work."}
               <br />
-              Small steps.
+              {admin ? "Your direction." : "Your rhythm."}
               <br />
-              <span className="text-primary">Real progress.</span>
+              <span className="text-primary">
+                {admin ? "In one place." : "Your progress."}
+              </span>
             </h1>
             <p className="mt-6 max-w-sm text-sm leading-7 text-muted-foreground">
               Bring your people and priorities together. A thoughtful workspace
@@ -126,7 +134,7 @@ export default function AuthPage({ role = "Admin", signup = false }) {
               {admin ? <ShieldCheck size={21} /> : <Users size={21} />}
             </div>
             <p className="eyebrow mb-3">
-              {admin ? "Admin workspace" : "Member workspace"}
+              {admin ? "Administrator sign in" : "Team member sign in"}
             </p>
             <h2 className="text-[30px] font-semibold leading-tight tracking-[-1.1px]">
               {title}

@@ -85,6 +85,22 @@
     text-wrap: balance;
   }
 }
+@layer base {
+  .workspace-admin {
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 240 80% 97%;
+    --accent-foreground: 243 65% 45%;
+    --ring: 243 75% 59%;
+  }
+  .dark .workspace-admin {
+    --primary: 234 89% 82%;
+    --primary-foreground: 240 35% 15%;
+    --accent: 240 22% 19%;
+    --accent-foreground: 234 89% 86%;
+    --ring: 234 89% 82%;
+  }
+}
 @layer components {
   .page-wrap {
     @apply mx-auto w-full max-w-[1320px] px-5 py-8 sm:px-8 lg:px-10 lg:py-10;

@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
-const ThemeContext = createContext(null);
+import { AppearanceContext, useAppearance } from "../hooks/useAppearance";
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     try {
@@ -24,13 +24,13 @@ export function ThemeProvider({ children }) {
     }
   }, [theme]);
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <AppearanceContext.Provider value={{ theme, setTheme }}>
       {children}
-    </ThemeContext.Provider>
+    </AppearanceContext.Provider>
   );
 }
 export function ThemeToggle() {
-  const { theme, setTheme } = useContext(ThemeContext);
+  const { theme, setTheme } = useAppearance();
   const label = `Switch to ${theme === "dark" ? "light" : "dark"} mode`;
   return (
     <button

@@ -16,6 +16,7 @@ import useWorkspaceData from "../hooks/useWorkspaceData";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
+import DateInput from "./ui/DateInput";
 import HomeShimmer from "./HomeShimmer";
 import {
   LoadError,
@@ -47,6 +48,7 @@ export default function TaskForm({ mode = "create" }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [dateInvalid, setDateInvalid] = useState(false);
   useEffect(() => {
     if (!data || create) return;
     setDescription(data.description || data.title || "");
@@ -59,6 +61,10 @@ export default function TaskForm({ mode = "create" }) {
     : data?.user?.name || data?.assignee?.name || "Team member";
   async function submit(event) {
     event.preventDefault();
+    if (create && (!dueDate || dateInvalid)) {
+      setError("Choose a valid due date before assigning this task.");
+      return;
+    }
     setSaving(true);
     setError("");
     setSuccess("");
@@ -184,11 +190,11 @@ export default function TaskForm({ mode = "create" }) {
                 maxLength={2000}
               />
               <div className="grid gap-5 sm:grid-cols-2">
-                <Input
+                <DateInput
                   label="Due date"
-                  type="date"
                   value={dueDate}
-                  onChange={(event) => setDueDate(event.target.value)}
+                  onChange={setDueDate}
+                  onValidationChange={setDateInvalid}
                   readOnly={!create}
                   required={create}
                 />
