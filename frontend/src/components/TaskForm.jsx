@@ -18,6 +18,11 @@ import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import DateInput from "./ui/DateInput";
 import HomeShimmer from "./HomeShimmer";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import { notify } from "../utils/notifications";
 import {
   LoadError,
   Notice,
@@ -49,6 +54,7 @@ export default function TaskForm({ mode = "create" }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [dateInvalid, setDateInvalid] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   useEffect(() => {
     if (!data || create) return;
     setDescription(data.description || data.title || "");
@@ -61,7 +67,7 @@ export default function TaskForm({ mode = "create" }) {
     : data?.user?.name || data?.assignee?.name || "Team member";
   async function submit(event) {
     event.preventDefault();
-    if (create && (!dueDate || dateInvalid)) {
+    if (admin && (!dueDate || dateInvalid)) {
       setError("Choose a valid due date before assigning this task.");
       return;
     }
@@ -74,14 +80,15 @@ export default function TaskForm({ mode = "create" }) {
           description,
           dueDate,
           status,
-          id: /^\d+$/.test(id) ? Number(id) : id,
+          id,
           comments,
         });
       else if (admin)
-        await api.put("/admin/admincomment", {
-          taskId: data.id,
-          usersId: data.userId,
-          comment: comments,
+        await api.put(`/admin/task/${data.id}`, {
+          description,
+          dueDate,
+          status,
+          comments,
         });
       else
         await api.put("/user/taskupdate", {
@@ -94,12 +101,17 @@ export default function TaskForm({ mode = "create" }) {
           ? "Task assigned. A clear next step for your teammate."
           : "Your changes have been saved.",
       );
+      notify(create ? "Task assigned." : "Task updated.");
       if (create) {
         setDescription("");
         setComments("");
         setDueDate("");
       }
     } catch (failure) {
+      notify(
+        failure.response?.data?.message || "Unable to save task.",
+        "error",
+      );
       setError(
         failure.response?.data?.message ||
           failure.response?.data?.error ||
@@ -110,13 +122,18 @@ export default function TaskForm({ mode = "create" }) {
     }
   }
   async function remove() {
-    if (!window.confirm("Delete this task? This cannot be undone.")) return;
+    setDeleteOpen(false);
     setSaving(true);
     setError("");
     try {
       await api.delete("/admin/delete", { data: { taskId: data.id } });
+      notify("Task deleted.");
       navigate("/users");
     } catch (failure) {
+      notify(
+        failure.response?.data?.message || "Unable to delete task.",
+        "error",
+      );
       setError(
         failure.response?.data?.message ||
           "We couldn’t delete this task. Please try again.",
@@ -127,6 +144,27 @@ export default function TaskForm({ mode = "create" }) {
   }
   return (
     <div className="page-wrap">
+      <Dialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete this task?</DialogTitle>
+        <DialogContent>
+          <p className="text-sm text-muted-foreground">
+            This permanently removes the assignment and its notes.
+          </p>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={remove} disabled={saving}>
+            Delete permanently
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Link
         to={admin ? "/users" : "/mytasks"}
         className="mb-7 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"
@@ -142,14 +180,14 @@ export default function TaskForm({ mode = "create" }) {
           create
             ? "A clear next step."
             : admin
-              ? "Keep the conversation moving."
+              ? "Edit task"
               : "A little progress, every day."
         }
         description={
           create
             ? "A thoughtful assignment gives your teammate clarity, context, and room to do their best."
             : admin
-              ? "Review this assignment and leave a helpful note for your teammate."
+              ? "Update the assignment, deadline, status, and notes for your teammate."
               : "Update your progress and let your team know how things are going."
         }
       />
@@ -185,7 +223,7 @@ export default function TaskForm({ mode = "create" }) {
                 placeholder="e.g. Prepare the first draft of the project proposal"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                readOnly={!create}
+                readOnly={!admin}
                 required
                 maxLength={2000}
               />
@@ -195,14 +233,13 @@ export default function TaskForm({ mode = "create" }) {
                   value={dueDate}
                   onChange={setDueDate}
                   onValidationChange={setDateInvalid}
-                  readOnly={!create}
-                  required={create}
+                  readOnly={!admin}
+                  required={admin}
                 />
                 <Select
                   label="Status"
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
-                  disabled={!create && admin}
                   options={[
                     { value: "Not Started", label: "To do" },
                     { value: "In Progress", label: "In progress" },
@@ -215,6 +252,16 @@ export default function TaskForm({ mode = "create" }) {
                   ]}
                 />
               </div>
+              {!admin && data?.adminComments && (
+                <div className="rounded-lg border border-border bg-background p-4">
+                  <p className="mb-2 text-xs font-semibold">
+                    Assignment notes from your admin
+                  </p>
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                    {data.adminComments}
+                  </p>
+                </div>
+              )}
               <div className="space-y-2">
                 <label
                   htmlFor="task-notes"
@@ -246,7 +293,7 @@ export default function TaskForm({ mode = "create" }) {
                 <Button
                   size="sm"
                   variant="danger"
-                  onClick={remove}
+                  onClick={() => setDeleteOpen(true)}
                   disabled={saving}
                 >
                   <Trash2 size={14} />

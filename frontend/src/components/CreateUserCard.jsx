@@ -48,8 +48,8 @@ export default function CreateUserCard() {
           <Users size={19} />
         </span>
         <p className="text-xs leading-6 text-muted-foreground">
-          Create their account and a workspace. Share the credentials with your
-          teammate so they can get started.
+          Create their account. Share the credentials with your teammate so they
+          can get started.
         </p>
       </div>
       <form onSubmit={submit} className="space-y-5">
@@ -72,11 +72,11 @@ export default function CreateUserCard() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <PasswordInput
-          placeholder="At least 6 characters"
+          placeholder="At least 15 characters"
           autoComplete="new-password"
           required
-          minLength={6}
-          maxLength={256}
+          minLength={15}
+          maxLength={128}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />

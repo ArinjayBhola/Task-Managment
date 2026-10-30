@@ -3,5 +3,6 @@ compatibility_date = "2024-07-14"
 type = "javascript"
 
 [vars]
+APP_ORIGIN = "https://task-managment-8ihr.vercel.app"
 DATABASE_URL=""
 JWT_SECRET = ""

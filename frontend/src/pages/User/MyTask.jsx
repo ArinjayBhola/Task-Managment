@@ -26,7 +26,7 @@ export default function MyTask() {
   return (
     <div className="page-wrap">
       <PageHeading
-        eyebrow="Member workspace · My work"
+        eyebrow="Member dashboard · My work"
         title="My tasks"
         description="Your assignments, your progress, your next step. Focus on the work that’s yours."
         action={

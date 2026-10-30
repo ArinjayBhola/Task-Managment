@@ -6,6 +6,8 @@
     "deploy": "wrangler deploy --minify src/index.ts",
     "db:push": "drizzle-kit push",
     "db:auth": "node scripts/setup-admin.mjs",
+    "db:tasks": "node scripts/setup-tasks.mjs",
+    "db:security": "node scripts/setup-security.mjs",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

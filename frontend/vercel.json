@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://task-managment-backend.arinjaybhola.workers.dev/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }

@@ -1,21 +1,18 @@
 /* eslint-disable react/prop-types */
 import { Navigate } from "react-router-dom";
-import useAuthenticate from "../utils/useAuthenticate";
-import { jwtDecode } from "jwt-decode";
-
-const ProtectedRoute = ({ children, role }) => {
-  const isAuthenticated = useAuthenticate();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-  const account = jwtDecode(localStorage.getItem("token"));
-  if (role && account.role !== role)
+import { useAuth } from "../hooks/useAuth";
+export default function ProtectedRoute({ children, role }) {
+  const { user } = useAuth();
+  if (!user)
     return (
-      <Navigate to={account.role === "Admin" ? "/users" : "/mytasks"} replace />
+      <Navigate
+        to={role === "Admin" ? "/admin-signin" : "/user-signin"}
+        replace
+      />
     );
-
+  if (role && user.role !== role)
+    return (
+      <Navigate to={user.role === "Admin" ? "/users" : "/mytasks"} replace />
+    );
   return children;
-};
-
-export default ProtectedRoute;
+}

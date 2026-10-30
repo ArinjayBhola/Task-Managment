@@ -1,5 +1,5 @@
 import { Link, Navigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../hooks/useAuth";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -14,13 +14,8 @@ import Brand from "../components/Brand";
 import { ThemeToggle } from "../components/ThemeProvider";
 import { Button } from "../components/ui/Button";
 export default function Welcome() {
-  let account;
-  try {
-    account = jwtDecode(localStorage.getItem("token") || "");
-  } catch {
-    /* Public landing page. */
-  }
-  if (account?.exp > Date.now() / 1000)
+  const { user: account } = useAuth();
+  if (account)
     return (
       <Navigate to={account.role === "Admin" ? "/users" : "/mytasks"} replace />
     );
@@ -62,9 +57,9 @@ export default function Welcome() {
               Find your focus and make a little progress, every day.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/admin-signup">
+              <Link to="/admin-signin">
                 <Button size="lg">
-                  Build your workspace
+                  Open admin console
                   <ArrowRight size={15} />
                 </Button>
               </Link>
@@ -94,7 +89,7 @@ export default function Welcome() {
                   <span className="flex h-5 w-5 items-center justify-center rounded bg-primary text-primary-foreground">
                     <Check size={12} />
                   </span>
-                  The everyday workspace
+                  Your team at a glance
                 </span>
                 <span className="text-[10px] text-muted-foreground">
                   Preview
@@ -212,7 +207,7 @@ export default function Welcome() {
           to="/admin-signin"
           className="flex items-center gap-1 hover:text-primary"
         >
-          Your workspace awaits
+          Your dashboard awaits
           <ArrowUpRight size={12} />
         </Link>
       </footer>

@@ -1,7 +1,8 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../hooks/useAuth";
+import { notify } from "../utils/notifications";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -25,13 +26,8 @@ export default function AuthPage({ role = "Admin", signup = false }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  let existing;
-  try {
-    existing = jwtDecode(localStorage.getItem("token") || "");
-  } catch {
-    /* Show login for missing or invalid sessions. */
-  }
-  if (existing?.exp > Date.now() / 1000)
+  const { user: existing, setUser } = useAuth();
+  if (existing)
     return (
       <Navigate
         to={existing.role === "Admin" ? "/users" : "/mytasks"}
@@ -53,16 +49,16 @@ export default function AuthPage({ role = "Admin", signup = false }) {
         `/${admin ? "admin" : "user"}/${signup ? "signup" : "signin"}`,
         { ...(signup ? { name } : {}), email, password },
       );
-      if (!data.token) throw new Error("Unable to sign in. Please try again.");
-      localStorage.setItem("token", data.token);
-      localStorage.removeItem("activeOrgId");
-      if (!admin) {
-        const { data: organizations } = await api.get("/user/organizations");
-        if (organizations[0])
-          localStorage.setItem("activeOrgId", organizations[0].id);
-      }
+      if (!data.user) throw new Error("Unable to sign in. Please try again.");
+      setUser(data.user);
+      notify(signup ? "Account created." : "Welcome back.");
       navigate(admin ? "/users" : "/mytasks", { replace: true });
     } catch (failure) {
+      notify(
+        failure.response?.data?.message ||
+          "Unable to sign in. Please try again.",
+        "error",
+      );
       setError(
         failure.response?.data?.message ||
           failure.response?.data?.error ||
@@ -85,7 +81,7 @@ export default function AuthPage({ role = "Admin", signup = false }) {
             <p className="eyebrow !text-accent-foreground">
               {admin
                 ? "Admin console · Team operations"
-                : "Member workspace · Personal focus"}
+                : "Member dashboard · Personal focus"}
             </p>
             <h1 className="mt-10 max-w-md text-[54px] font-medium leading-[1.09] tracking-[-2.5px]">
               {admin ? "Your team." : "Your work."}
@@ -97,7 +93,7 @@ export default function AuthPage({ role = "Admin", signup = false }) {
               </span>
             </h1>
             <p className="mt-6 max-w-sm text-sm leading-7 text-muted-foreground">
-              Bring your people and priorities together. A thoughtful workspace
+              Bring your people and priorities together. A thoughtful dashboard
               for getting things done, one task at a time.
             </p>
           </div>
@@ -167,12 +163,12 @@ export default function AuthPage({ role = "Admin", signup = false }) {
               />
               <PasswordInput
                 placeholder={
-                  signup ? "At least 6 characters" : "Enter your password"
+                  signup ? "At least 15 characters" : "Enter your password"
                 }
                 autoComplete={signup ? "new-password" : "current-password"}
                 required
-                minLength={6}
-                maxLength={256}
+                minLength={signup ? 15 : 1}
+                maxLength={signup ? 128 : 256}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -198,12 +194,14 @@ export default function AuthPage({ role = "Admin", signup = false }) {
             <div className="mt-7 border-t border-border pt-6 text-center text-xs text-muted-foreground">
               {admin ? (
                 <>
-                  {signup ? "Already have an account?" : "New to TaskMaster?"}{" "}
+                  {signup
+                    ? "Already have an account?"
+                    : "Need an admin account?"}{" "}
                   <Link
                     className="font-semibold text-primary hover:underline"
                     to={signup ? "/admin-signin" : "/admin-signup"}
                   >
-                    {signup ? "Sign in" : "Create an account"}
+                    {signup ? "Sign in" : "Initial admin setup"}
                   </Link>
                 </>
               ) : (

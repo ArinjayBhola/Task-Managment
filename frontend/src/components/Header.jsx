@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../hooks/useAuth";
+import AccountSecurity from "./AccountSecurity";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -10,25 +11,17 @@ import {
   Menu,
   Users,
   X,
-  Building2,
   ShieldCheck,
 } from "lucide-react";
 import Brand from "./Brand";
 import { ThemeToggle } from "./ThemeProvider";
-import api from "../utils/axiosInstance";
-import { Select } from "./ui/Select";
 
 export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [organizations, setOrganizations] = useState([]);
-  let account = {};
-  try {
-    account = jwtDecode(localStorage.getItem("token") || "");
-  } catch {
-    /* Protected routes handle missing sessions. */
-  }
+  const { user, logout: signOut } = useAuth();
+  const account = user || {};
   const admin = account.role === "Admin";
   const email = account.email || (admin ? "Administrator" : "Team member");
   const home = admin ? "/users" : "/mytasks";
@@ -61,13 +54,6 @@ export default function Header() {
     setOpen(false);
   }, [location.pathname]);
   useEffect(() => {
-    if (!admin)
-      api
-        .get("/user/organizations")
-        .then(({ data }) => setOrganizations(data))
-        .catch(() => {});
-  }, [admin]);
-  useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     if (window.matchMedia("(max-width: 1023px)").matches)
@@ -81,10 +67,8 @@ export default function Header() {
       document.body.style.overflow = previousOverflow;
     };
   }, [open]);
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("activeOrgId");
-    navigate(admin ? "/admin-signin" : "/user-signin");
+  const logout = async () => {
+    if (await signOut()) navigate(admin ? "/admin-signin" : "/user-signin");
   };
   return (
     <>
@@ -96,7 +80,7 @@ export default function Header() {
         />
       )}
       <aside
-        aria-label="Workspace navigation"
+        aria-label="Application navigation"
         className={`fixed inset-y-0 left-0 z-50 w-60 flex-col border-r border-border bg-card ${open ? "flex" : "hidden lg:flex"}`}
       >
         <div className="flex h-20 items-center justify-between px-6">
@@ -111,11 +95,11 @@ export default function Header() {
         </div>
         <div className="mx-4 mb-8 flex items-center gap-3 rounded-lg border border-border bg-background p-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-primary">
-            {admin ? <ShieldCheck size={18} /> : <Building2 size={18} />}
+            {admin ? <ShieldCheck size={18} /> : <Users size={18} />}
           </div>
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">
-              {admin ? "Admin console" : "My workspace"}
+              {admin ? "Admin console" : "My dashboard"}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {admin ? "People, access & delivery" : "My tasks & progress"}
@@ -137,23 +121,6 @@ export default function Header() {
             </NavLink>
           ))}
         </nav>
-        {organizations.length > 0 && (
-          <div className="mx-4 mt-6">
-            <Select
-              id="workspace-select"
-              label="Active workspace"
-              value={localStorage.getItem("activeOrgId") || organizations[0].id}
-              onChange={(event) => {
-                localStorage.setItem("activeOrgId", event.target.value);
-                window.location.reload();
-              }}
-              options={organizations.map((org) => ({
-                value: org.id,
-                label: org.name,
-              }))}
-            />
-          </div>
-        )}
         <div className="mx-4 mt-auto mb-5 rounded-xl border border-border bg-background p-4">
           <span className="mb-3 block text-primary">
             <ArrowUpRight size={20} />
@@ -164,6 +131,7 @@ export default function Header() {
           </p>
         </div>
         <div className="border-t border-border p-4">
+          <AccountSecurity />
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
               {email[0].toUpperCase()}
@@ -201,7 +169,7 @@ export default function Header() {
             to={home}
             className="hidden text-xs text-muted-foreground sm:block"
           >
-            {admin ? "Administration" : "My workspace"}
+            {admin ? "Administration" : "My dashboard"}
           </Link>
           <ChevronRight
             size={13}

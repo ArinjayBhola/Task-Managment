@@ -46,7 +46,7 @@ export function Metrics({ users, tasks, personal = false }) {
       label: personal ? "Total tasks" : "Team members",
       value: personal ? tasks.length : users.length,
       icon: personal ? ListTodo : Users,
-      note: personal ? "Everything on your list" : "People in your workspace",
+      note: personal ? "Everything on your list" : "People on your team",
       color: "text-primary bg-accent",
     },
     {
@@ -119,7 +119,7 @@ export function EmptyState({
 }
 export function LoadError({
   retry,
-  message = "We couldn’t load this workspace.",
+  message = "We couldn’t load this dashboard.",
 }) {
   return (
     <div

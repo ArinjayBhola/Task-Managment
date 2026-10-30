@@ -26,9 +26,9 @@ export default function AllUser() {
   return (
     <div className="page-wrap">
       <PageHeading
-        eyebrow="Member workspace · Read-only overview"
+        eyebrow="Member dashboard · Read-only overview"
         title="Team activity"
-        description="Follow progress in your workspace. Manage your own assignments from My tasks."
+        description="Follow progress in your team. Manage your own assignments from My tasks."
       />
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -42,7 +42,7 @@ export default function AllUser() {
           <Metrics users={users} tasks={tasks} />
           <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <h2 className="text-base font-semibold">
-              Around your workspace{" "}
+              Around your team{" "}
               <span className="ml-2 text-xs font-normal text-muted-foreground">
                 {users.length} members
               </span>
@@ -74,7 +74,7 @@ export default function AllUser() {
               description={
                 search
                   ? "No teammates match that search."
-                  : "Your workspace members will appear here."
+                  : "Your team members will appear here."
               }
             />
           )}

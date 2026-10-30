@@ -1,7 +1,8 @@
 /* eslint-disable react/prop-types */
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../hooks/useAuth";
+import Notifications from "./Notifications";
 import {
   ThemeProvider as MuiThemeProvider,
   createTheme,
@@ -13,12 +14,8 @@ import { useAppearance } from "../hooks/useAppearance";
 export default function DesignTheme({ children }) {
   const { theme } = useAppearance();
   const { pathname } = useLocation();
-  let role;
-  try {
-    role = jwtDecode(localStorage.getItem("token") || "").role;
-  } catch {
-    /* Public screen. */
-  }
+  const { user } = useAuth();
+  const role = user?.role;
   const admin =
     pathname === "/admin-signin" ||
     pathname === "/admin-signup" ||
@@ -95,7 +92,7 @@ export default function DesignTheme({ children }) {
     <MuiThemeProvider theme={muiTheme}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <div className={admin ? "workspace-admin" : "workspace-member"}>
-          {children}
+          <Notifications>{children}</Notifications>
         </div>
       </LocalizationProvider>
     </MuiThemeProvider>

@@ -25,7 +25,7 @@ export default function TaskDetails({ task }) {
         >
           {task.title || task.description || "Untitled task"}
         </p>
-        {task.title && task.description && (
+        {task.title && task.description && task.title !== task.description && (
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {task.description}
           </p>

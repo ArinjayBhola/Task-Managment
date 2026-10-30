@@ -1,7 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { Buffer } from "node:buffer";
 import dayjs from "dayjs";
 
+const userUuid = (value) =>
+  `11111111-1111-4111-8111-${String(value).padStart(12, "0")}`;
+const taskUuid = (value) =>
+  `22222222-2222-4222-8222-${String(value).padStart(12, "0")}`;
 const tasks = [
   {
     id: 101,
@@ -40,6 +43,10 @@ const tasks = [
     assigneeId: 4,
   },
 ];
+for (const task of tasks) {
+  task.id = taskUuid(task.id);
+  task.assigneeId = userUuid(task.assigneeId);
+}
 const users = [
   "Alex Morgan",
   "Jamie Chen",
@@ -48,25 +55,26 @@ const users = [
   "Casey Brooks",
   "Riley Parker",
 ].map((name, index) => ({
-  id: index + 1,
+  id: userUuid(index + 1),
   name,
   email: `${name.toLowerCase().replace(" ", ".")}@studio.co`,
-  tasks: tasks.filter((task) => task.assigneeId === index + 1),
+  tasks: tasks.filter((task) => task.assigneeId === userUuid(index + 1)),
 }));
-function token(role) {
-  return `${Buffer.from("{}").toString("base64url")}.${Buffer.from(JSON.stringify({ id: 1, role, email: role === "Admin" ? "arinjay@studio.co" : "alex.morgan@studio.co", exp: 4102444800 })).toString("base64url")}.test`;
-}
 async function setup(page, { role, theme = "light" } = {}) {
+  let current = role
+    ? {
+        id: userUuid(1),
+        name: role === "Admin" ? "Test admin" : "Alex Morgan",
+        email: role === "Admin" ? "arinjay@studio.co" : "alex.morgan@studio.co",
+        role,
+      }
+    : null;
   await page.addInitScript(
-    ({ role, theme, value }) => {
+    ({ theme }) => {
       if (!localStorage.getItem("taskmaster-theme"))
         localStorage.setItem("taskmaster-theme", theme);
-      if (role) {
-        localStorage.setItem("token", value);
-        localStorage.setItem("activeOrgId", "7");
-      }
     },
-    { role, theme, value: token(role) },
+    { theme },
   );
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname.replace(
@@ -74,21 +82,35 @@ async function setup(page, { role, theme = "light" } = {}) {
       "",
     );
     let data;
-    if (/^(admin|user)\/(signin|signup)$/.test(path))
-      data = { token: token(path.startsWith("admin") ? "Admin" : "User") };
-    else if (path === "admin/usersignup") data = { id: 1, defaultOrgId: 7 };
+    if (path === "auth/session") {
+      if (!current) {
+        await route.fulfill({
+          status: 401,
+          json: { message: "Sign in required" },
+        });
+        return;
+      }
+      data = { user: current };
+    } else if (/^(admin|user)\/(signin|signup)$/.test(path)) {
+      current = {
+        id: userUuid(1),
+        name: "Alex Morgan",
+        email: "alex@studio.co",
+        role: path.startsWith("admin") ? "Admin" : "User",
+      };
+      data = { user: current };
+    } else if (path === "auth/logout") {
+      current = null;
+      data = { message: "Signed out" };
+    } else if (path === "auth/password") data = { user: current };
+    else if (path === "admin/usersignup") data = { id: userUuid(1) };
     else if (path === "admin/bulk" || path === "user/bulktask") data = users;
     else if (path === "user/bulk") data = [users[0]];
-    else if (path === "user/organizations")
-      data = [{ id: 7, name: "Everyday Studio", role: "owner" }];
     else if (/^admin\/user\//.test(path)) data = users[0];
     else if (/^(admin\/task|user\/bulktask)\//.test(path))
       data = { ...tasks[0], user: users[0] };
     else data = { message: "Saved" };
-    await route.fulfill({
-      json: data,
-      headers: { "access-control-allow-origin": "*" },
-    });
+    await route.fulfill({ json: data });
   });
 }
 async function noOverflow(page) {
@@ -185,7 +207,7 @@ for (const theme of ["light", "dark"]) {
     await expect(
       page.getByText("Shape the new onboarding experience", { exact: true }),
     ).toHaveCount(0);
-    await page.goto("/user-edittask/101");
+    await page.goto(`/user-edittask/${taskUuid(101)}`);
     await expect(page.getByLabel("Status", { exact: true })).toBeEnabled();
     await noOverflow(page);
     await page.screenshot({
@@ -240,11 +262,9 @@ for (const role of ["Admin", "User"]) {
     });
     await page.getByRole("button", { name: "Open menu" }).click();
     await expect(
-      page
-        .getByRole("navigation")
-        .getByRole("link", {
-          name: role === "Admin" ? "Team management" : "Team activity",
-        }),
+      page.getByRole("navigation").getByRole("link", {
+        name: role === "Admin" ? "Team management" : "Team activity",
+      }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Close menu", exact: true }).click();
     if (role === "Admin") {
@@ -265,7 +285,7 @@ for (const role of ["Admin", "User"]) {
       await page
         .getByRole("button", { name: "Create member", exact: true })
         .click();
-      await expect(page).toHaveURL(/\/user\/1$/);
+      await expect(page).toHaveURL(new RegExp(`/user/${userUuid(1)}$`));
     }
   });
 }
@@ -306,7 +326,7 @@ for (const theme of ["light", "dark"]) {
     await expect(
       page.getByText("Shape the new onboarding experience", { exact: true }),
     ).toHaveCount(0);
-    await page.goto("/task/1");
+    await page.goto(`/task/${userUuid(1)}`);
     await page
       .getByLabel("What needs to get done?")
       .fill("A task with a calendar date");
@@ -318,7 +338,10 @@ for (const theme of ["light", "dark"]) {
       .getByRole("button", { name: "Choose date", exact: true })
       .click();
     await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.locator('.MuiPickerPopper-paper')).toHaveCSS('opacity', '1');
+    await expect(page.locator(".MuiPickerPopper-paper")).toHaveCSS(
+      "opacity",
+      "1",
+    );
     await page.screenshot({
       path: testInfo.outputPath(`mui-calendar-${theme}.png`),
     });
@@ -341,10 +364,15 @@ for (const theme of ["light", "dark"]) {
   });
 }
 
-test("member workspace uses MUI switching and restricts administration routes", async ({
+test("member dashboard has no workspace selector and restricts administration routes", async ({
   page,
 }) => {
   await setup(page, { role: "User" });
+  const organizationRequests = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/v1/user/organizations")
+      organizationRequests.push(request.url());
+  });
   await page.goto("/mytasks");
   await expect(
     page.getByRole("link", { name: "Task assignments", exact: true }),
@@ -352,13 +380,12 @@ test("member workspace uses MUI switching and restricts administration routes", 
   await expect(
     page.getByRole("button", { name: "New team member", exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("combobox", { name: "Active workspace" }).click();
   await expect(
-    page.getByRole("option", { name: "Everyday Studio", exact: true }),
-  ).toBeVisible();
-  await page.keyboard.press("Escape");
+    page.getByRole("combobox", { name: "Active workspace" }),
+  ).toHaveCount(0);
   await page.goto("/admin/tasks");
   await expect(page).toHaveURL(/\/mytasks$/);
+  expect(organizationRequests).toEqual([]);
   await page.goto("/users");
   await expect(page).toHaveURL(/\/mytasks$/);
 });
@@ -374,18 +401,70 @@ test("admin console redirects member routes back to management", async ({
   ).toBeVisible();
 });
 
-test.describe('MUI controls on a touch device', () => {
-  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  test('date dialog and status menu fit a mobile task form', async ({ page }) => {
-    await setup(page, { role: 'Admin', theme: 'dark' });
-    await page.goto('/task/1');
-    await page.getByRole('combobox', { name: 'Status', exact: true }).click();
-    await page.getByRole('option', { name: 'In progress', exact: true }).click();
-    await page.getByRole('button', { name: 'Choose date', exact: true }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await page.getByRole('gridcell', { name: '15', exact: true }).click();
-    await page.getByRole('button', { name: 'OK', exact: true }).click();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
+test.describe("MUI controls on a touch device", () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  test("date dialog and status menu fit a mobile task form", async ({
+    page,
+  }) => {
+    await setup(page, { role: "Admin", theme: "dark" });
+    await page.goto(`/task/${userUuid(1)}`);
+    await page.getByRole("combobox", { name: "Status", exact: true }).click();
+    await page
+      .getByRole("option", { name: "In progress", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Choose date", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.getByRole("gridcell", { name: "15", exact: true }).click();
+    await page.getByRole("button", { name: "OK", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await noOverflow(page);
   });
+});
+
+test("task deletion uses a MUI confirmation and toast instead of browser dialogs", async ({
+  page,
+}) => {
+  await setup(page, { role: "Admin" });
+  page.on("dialog", () => {
+    throw new Error("Native browser dialog is not allowed");
+  });
+  await page.goto(`/admin-edittask/${taskUuid(101)}`);
+  await page.getByRole("button", { name: "Delete task", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Delete this task?" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Delete permanently", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/users$/);
+  await expect(page.getByRole("alert")).toContainText("Task deleted.");
+});
+test("password changes use MUI feedback and no token is stored in browser storage", async ({
+  page,
+}) => {
+  await setup(page, { role: "User" });
+  await page.goto("/mytasks");
+  await page
+    .getByRole("button", { name: "Change password", exact: true })
+    .click();
+  await page
+    .getByLabel("Current password", { exact: true })
+    .fill("a current long passphrase");
+  await page
+    .getByLabel("New password", { exact: true })
+    .fill("a replacement long passphrase");
+  await page
+    .getByLabel("Confirm new password", { exact: true })
+    .fill("a replacement long passphrase");
+  await page
+    .getByRole("button", { name: "Update password", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("Password changed.");
+  expect(await page.evaluate(() => localStorage.getItem("token"))).toBeNull();
 });

@@ -13,6 +13,7 @@ import UserSignin from "./pages/User/UserSignin";
 import Welcome from "./pages/Welcome";
 import appStore from "./redux/appStore";
 import DesignTheme from "./components/DesignTheme";
+import AuthProvider from "./components/AuthProvider";
 import TaskAssignments from "./pages/Admin/TaskAssignments";
 import HomeShimmer from "./components/HomeShimmer";
 
@@ -130,9 +131,11 @@ function App() {
 function AppWrapper() {
   return (
     <BrowserRouter>
-      <DesignTheme>
-        <App />
-      </DesignTheme>
+      <AuthProvider>
+        <DesignTheme>
+          <App />
+        </DesignTheme>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
