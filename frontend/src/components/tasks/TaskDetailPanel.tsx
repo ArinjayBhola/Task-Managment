@@ -1,8 +1,18 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, User, Tag, Flag, Hash, ArrowRight, CheckCircle2 } from "lucide-react";
+import {
+  X,
+  Calendar,
+  User,
+  Tag,
+  Flag,
+  Hash,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
 import { Task, Status, Priority } from "../../types";
 import { cn } from "../../lib/utils";
+import TextField from "@mui/material/TextField";
 
 interface TaskDetailPanelProps {
   task: Task | null;
@@ -35,10 +45,13 @@ export const TaskDetailPanel = ({ task, onClose }: TaskDetailPanelProps) => {
               </div>
               <div className="flex items-center gap-2">
                 <button className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold border rounded-md hover:bg-accent transition-colors">
-                   <CheckCircle2 size={14} /> Mark Done
+                  <CheckCircle2 size={14} /> Mark Done
                 </button>
                 <div className="w-px h-6 bg-border mx-1" />
-                <button onClick={onClose} className="p-1.5 hover:bg-accent rounded-lg transition-colors text-muted-foreground hover:text-foreground">
+                <button
+                  onClick={onClose}
+                  className="p-1.5 hover:bg-accent rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                >
                   <X size={18} />
                 </button>
               </div>
@@ -46,12 +59,30 @@ export const TaskDetailPanel = ({ task, onClose }: TaskDetailPanelProps) => {
 
             <div className="flex-1 overflow-y-auto p-8 space-y-10 no-scrollbar">
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold tracking-tight leading-tight">{task.title}</h2>
+                <h2 className="text-2xl font-bold tracking-tight leading-tight">
+                  {task.title}
+                </h2>
 
                 <div className="grid grid-cols-2 gap-y-6 gap-x-12">
-                  <DetailField icon={User} label="Assignee" value="Arinjay Bhola" />
-                  <DetailField icon={Flag} label="Priority" value={task.priority} />
-                  <DetailField icon={Calendar} label="Due Date" value={task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date"} />
+                  <DetailField
+                    icon={User}
+                    label="Assignee"
+                    value="Arinjay Bhola"
+                  />
+                  <DetailField
+                    icon={Flag}
+                    label="Priority"
+                    value={task.priority}
+                  />
+                  <DetailField
+                    icon={Calendar}
+                    label="Due Date"
+                    value={
+                      task.dueDate
+                        ? new Date(task.dueDate).toLocaleDateString()
+                        : "No due date"
+                    }
+                  />
                   <DetailField icon={Tag} label="Project" value="Edge Engine" />
                 </div>
               </div>
@@ -66,19 +97,32 @@ export const TaskDetailPanel = ({ task, onClose }: TaskDetailPanelProps) => {
               </div>
 
               <div className="space-y-6">
-                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Activity Log</h3>
-                 <div className="space-y-6 relative before:absolute before:left-3 before:top-2 before:bottom-0 before:w-px before:bg-border/60">
-                   <ActivityItem user="AB" action="created the task" date="yesterday" isLast />
-                   <ActivityItem user="AB" action="changed status to In Progress" date="2 hours ago" />
-                 </div>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Activity Log
+                </h3>
+                <div className="space-y-6 relative before:absolute before:left-3 before:top-2 before:bottom-0 before:w-px before:bg-border/60">
+                  <ActivityItem
+                    user="AB"
+                    action="created the task"
+                    date="yesterday"
+                    isLast
+                  />
+                  <ActivityItem
+                    user="AB"
+                    action="changed status to In Progress"
+                    date="2 hours ago"
+                  />
+                </div>
               </div>
             </div>
 
             <footer className="p-4 border-t h-16 flex items-center bg-muted/5 shrink-0">
               <div className="flex-1 relative">
-                <input
+                <TextField
+                  label="Write a comment"
+                  fullWidth
+                  size="small"
                   placeholder="Type a comment or / to use commands..."
-                  className="w-full bg-accent/40 rounded-lg px-4 py-2 text-sm border border-transparent focus:border-primary/20 outline-none placeholder:text-muted-foreground transition-all"
                 />
               </div>
             </footer>
@@ -89,19 +133,39 @@ export const TaskDetailPanel = ({ task, onClose }: TaskDetailPanelProps) => {
   );
 };
 
-const DetailField = ({ icon: Icon, label, value }: { icon: any, label: string, value: string }) => (
+const DetailField = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+}) => (
   <div className="flex items-center gap-4 group">
     <div className="p-2.5 rounded-xl bg-muted/60 text-muted-foreground group-hover:text-primary transition-all duration-300">
       <Icon size={16} />
     </div>
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">{label}</span>
+      <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">
+        {label}
+      </span>
       <span className="text-sm font-semibold capitalize">{value}</span>
     </div>
   </div>
 );
 
-const ActivityItem = ({ user, action, date, isLast }: { user: string, action: string, date: string, isLast?: boolean }) => (
+const ActivityItem = ({
+  user,
+  action,
+  date,
+  isLast,
+}: {
+  user: string;
+  action: string;
+  date: string;
+  isLast?: boolean;
+}) => (
   <div className="flex items-start gap-4 relative">
     <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold shrink-0 z-10 text-primary">
       {user}
@@ -110,7 +174,9 @@ const ActivityItem = ({ user, action, date, isLast }: { user: string, action: st
       <p className="text-xs text-foreground/90">
         <span className="font-bold">{user}</span> {action}
       </p>
-      <span className="text-[10px] text-muted-foreground font-medium">{date}</span>
+      <span className="text-[10px] text-muted-foreground font-medium">
+        {date}
+      </span>
     </div>
   </div>
 );

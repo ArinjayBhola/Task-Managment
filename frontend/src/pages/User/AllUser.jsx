@@ -3,6 +3,7 @@ import { Search, Users } from "lucide-react";
 import useWorkspaceData from "../../hooks/useWorkspaceData";
 import UserTaskCard from "../../components/UserTaskCard";
 import HomeShimmer from "../../components/HomeShimmer";
+import { Input } from "../../components/ui/Input";
 import {
   PageHeading,
   Metrics,
@@ -48,13 +49,9 @@ export default function AllUser() {
               </span>
             </h2>
             <div className="relative sm:w-64">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                aria-label="Search team members"
-                className="field !py-2 !pl-9 text-xs"
+              <Input
+                label="Search team members"
+                startAdornment={<Search size={14} />}
                 placeholder="Find a teammate…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

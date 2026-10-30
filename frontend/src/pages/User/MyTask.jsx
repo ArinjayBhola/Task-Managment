@@ -3,6 +3,7 @@ import { Search, ListTodo } from "lucide-react";
 import useWorkspaceData from "../../hooks/useWorkspaceData";
 import TaskDetails from "../../components/TaskDetails";
 import HomeShimmer from "../../components/HomeShimmer";
+import { Input } from "../../components/ui/Input";
 import {
   PageHeading,
   Metrics,
@@ -54,13 +55,9 @@ export default function MyTask() {
               </span>
             </div>
             <div className="relative sm:w-64">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="field !py-2 !pl-9 text-xs"
-                aria-label="Search your tasks"
+              <Input
+                label="Search your tasks"
+                startAdornment={<Search size={14} />}
                 placeholder="Find a task…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

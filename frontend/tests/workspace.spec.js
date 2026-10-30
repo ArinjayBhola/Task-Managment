@@ -1,6 +1,77 @@
 import { test, expect } from "@playwright/test";
 import dayjs from "dayjs";
 
+for (const theme of ["light", "dark"]) {
+  test(`input labels float on focus and remain visible for filled fields in ${theme} mode`, async ({
+    page,
+  }, testInfo) => {
+    await setup(page, { theme });
+    await page.goto("/admin-signup");
+    const name = page.getByLabel("Full name", { exact: true });
+    const nameLabel = page.locator(
+      `label[for="${await name.getAttribute("id")}"]`,
+    );
+    await expect(nameLabel).toHaveAttribute("data-shrink", "false");
+    await name.focus();
+    await expect(nameLabel).toHaveAttribute("data-shrink", "true");
+    await name.fill("Alex Morgan");
+    await name.blur();
+    await expect(nameLabel).toHaveAttribute("data-shrink", "true");
+    await name.fill("");
+    await name.blur();
+    await expect(nameLabel).toHaveAttribute("data-shrink", "false");
+    await page.getByLabel("Email address", { exact: true }).focus();
+    await page.screenshot({
+      path: testInfo.outputPath(`floating-auth-${theme}.png`),
+    });
+    await setup(page, { role: "Admin", theme });
+    await page.goto(`/task/${userUuid(1)}`);
+    const notes = page.getByLabel("A little context (optional)", {
+      exact: true,
+    });
+    const notesLabel = page.locator(
+      `label[for="${await notes.getAttribute("id")}"]`,
+    );
+    await notes.fill("Helpful context stays readable.");
+    await notes.blur();
+    await expect(notesLabel).toHaveAttribute("data-shrink", "true");
+    await expect(notes).toHaveValue("Helpful context stays readable.");
+    await noOverflow(page);
+  });
+}
+
+for (const theme of ["light", "dark"]) {
+  test(`all auth screens fill the viewport in ${theme} mode`, async ({
+    page,
+  }, testInfo) => {
+    await setup(page, { theme });
+    for (const path of ["/admin-signin", "/admin-signup", "/user-signin"]) {
+      for (const viewport of [
+        { width: 1440, height: 1000 },
+        { width: 390, height: 844 },
+      ]) {
+        await page.setViewportSize(viewport);
+        await page.goto(path);
+        await expect(
+          page.getByLabel("Email address", { exact: true }),
+        ).toBeVisible();
+        const bounds = await page.getByRole("main").boundingBox();
+        expect(bounds.x).toBe(0);
+        expect(bounds.y).toBe(0);
+        expect(bounds.width).toBe(viewport.width);
+        expect(bounds.height).toBeGreaterThanOrEqual(viewport.height);
+        await noOverflow(page);
+        await page.screenshot({
+          path: testInfo.outputPath(
+            `${path.slice(1)}-${viewport.width}-${theme}.png`,
+          ),
+          fullPage: true,
+        });
+      }
+    }
+  });
+}
+
 const userUuid = (value) =>
   `11111111-1111-4111-8111-${String(value).padStart(12, "0")}`;
 const taskUuid = (value) =>

@@ -70,162 +70,170 @@ export default function AuthPage({ role = "Admin", signup = false }) {
     }
   }
   return (
-    <div className="min-h-screen bg-background">
-      <header className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-6 lg:px-12">
-        <Brand />
-        <ThemeToggle />
-      </header>
-      <main className="mx-auto grid max-w-[1440px] gap-12 px-6 py-8 lg:min-h-[calc(100vh-10rem)] lg:grid-cols-2 lg:gap-20 lg:px-12 lg:py-6">
-        <section className="relative hidden flex-col justify-between overflow-hidden rounded-2xl border border-border bg-accent p-10 lg:flex xl:p-14">
-          <div>
-            <p className="eyebrow !text-accent-foreground">
-              {admin
-                ? "Admin console · Team operations"
-                : "Member dashboard · Personal focus"}
-            </p>
-            <h1 className="mt-10 max-w-md text-[54px] font-medium leading-[1.09] tracking-[-2.5px]">
-              {admin ? "Your team." : "Your work."}
-              <br />
-              {admin ? "Your direction." : "Your rhythm."}
-              <br />
-              <span className="text-primary">
-                {admin ? "In one place." : "Your progress."}
-              </span>
-            </h1>
-            <p className="mt-6 max-w-sm text-sm leading-7 text-muted-foreground">
-              Bring your people and priorities together. A thoughtful dashboard
-              for getting things done, one task at a time.
-            </p>
-          </div>
-          <div className="my-10 space-y-3">
-            {[
-              "A clear view of every priority",
-              "Your team, moving together",
-              "More focus. Less friction.",
-            ].map((item, index) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 rounded-lg border border-primary/10 bg-card p-4"
-              >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-primary">
-                  <Check size={13} />
+    <div className="min-h-dvh bg-card">
+      <main className="grid min-h-dvh w-full lg:grid-cols-2">
+        <section className="hidden min-h-dvh flex-col bg-accent px-10 py-7 lg:flex xl:px-16">
+          <Brand />
+          <div className="my-auto py-10">
+            <div>
+              <p className="eyebrow !text-accent-foreground">
+                {admin
+                  ? "Admin console · Team operations"
+                  : "Member dashboard · Personal focus"}
+              </p>
+              <h1 className="mt-6 max-w-xl text-[clamp(44px,4.4vw,76px)] font-medium leading-[1.04] tracking-[-2px]">
+                {admin ? "Your team." : "Your work."}
+                <br />
+                {admin ? "Your direction." : "Your rhythm."}
+                <br />
+                <span className="text-primary">
+                  {admin ? "In one place." : "Your progress."}
                 </span>
-                <span className="flex-1 text-xs font-medium">{item}</span>
-                <span className="text-[10px] text-muted-foreground">
-                  0{index + 1}
-                </span>
-              </div>
-            ))}
+              </h1>
+              <p className="mt-6 max-w-md text-sm leading-7 text-muted-foreground">
+                Bring your people and priorities together. A thoughtful
+                dashboard for getting things done, one task at a time.
+              </p>
+            </div>
+            <div className="mt-9 max-w-md space-y-0">
+              {[
+                "A clear view of every priority",
+                "Your team, moving together",
+                "More focus. Less friction.",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-3 border-t border-primary/10 py-3.5"
+                >
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-primary">
+                    <Check size={13} />
+                  </span>
+                  <span className="flex-1 text-sm font-medium">{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center justify-between border-t border-primary/10 pt-6">
+          <div className="flex items-center justify-between border-t border-primary/10 pt-5">
             <span className="text-xs text-muted-foreground">
               Make room for meaningful work.
             </span>
             <ArrowUpRight size={19} className="text-primary" />
           </div>
         </section>
-        <section className="flex items-center justify-center py-8 lg:py-12">
-          <div className="w-full max-w-[380px]">
-            <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-primary">
-              {admin ? <ShieldCheck size={21} /> : <Users size={21} />}
-            </div>
-            <p className="eyebrow mb-3">
-              {admin ? "Administrator sign in" : "Team member sign in"}
-            </p>
-            <h2 className="text-[30px] font-semibold leading-tight tracking-[-1.1px]">
-              {title}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              {signup
-                ? "Create an admin account to organize your team and their next great idea."
-                : "Sign in to pick up where you left off."}
-            </p>
-            <form onSubmit={submit} className="mt-8 space-y-5">
-              {signup && (
-                <Input
-                  label="Full name"
-                  placeholder="Your full name"
-                  autoComplete="name"
-                  required
-                  maxLength={200}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              )}
-              <Input
-                label="Email address"
-                type="email"
-                placeholder="you@company.com"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <PasswordInput
-                placeholder={
-                  signup ? "At least 15 characters" : "Enter your password"
-                }
-                autoComplete={signup ? "new-password" : "current-password"}
-                required
-                minLength={signup ? 15 : 1}
-                maxLength={signup ? 128 : 256}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              {error && (
-                <p
-                  role="alert"
-                  className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs leading-5 text-destructive"
-                >
-                  {error}
-                </p>
-              )}
-              <Button type="submit" disabled={busy} className="w-full">
-                {busy ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <>
-                    {signup ? "Create account" : "Sign in"}
-                    <ArrowRight size={16} />
-                  </>
-                )}
-              </Button>
-            </form>
-            <div className="mt-7 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-              {admin ? (
-                <>
-                  {signup
-                    ? "Already have an account?"
-                    : "Need an admin account?"}{" "}
-                  <Link
-                    className="font-semibold text-primary hover:underline"
-                    to={signup ? "/admin-signin" : "/admin-signup"}
-                  >
-                    {signup ? "Sign in" : "Initial admin setup"}
-                  </Link>
-                </>
-              ) : (
-                <>Need an account? Ask your administrator.</>
-              )}
-            </div>
-            <Link
-              to={admin ? "/user-signin" : "/admin-signin"}
-              className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
-            >
-              {admin
-                ? "Sign in as a team member"
-                : "Sign in as an administrator"}
-              <ArrowUpRight size={13} />
-            </Link>
+        <section className="flex min-h-dvh flex-col px-6 py-5 sm:px-10 lg:px-14">
+          <div className="flex h-10 shrink-0 items-center justify-between">
+            <span className="lg:invisible">
+              <Brand />
+            </span>
+            <ThemeToggle />
           </div>
+          <div className="flex flex-1 items-center justify-center py-8">
+            <div className="w-full max-w-[440px]">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background text-primary">
+                {admin ? <ShieldCheck size={21} /> : <Users size={21} />}
+              </div>
+              <p className="eyebrow mb-2">
+                {signup
+                  ? "Administrator sign up"
+                  : admin
+                    ? "Administrator sign in"
+                    : "Team member sign in"}
+              </p>
+              <h2 className="text-[30px] font-semibold leading-tight tracking-[-1px] sm:text-[34px]">
+                {title}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {signup
+                  ? "Create an admin account to organize your team and their next great idea."
+                  : "Sign in to pick up where you left off."}
+              </p>
+              <form onSubmit={submit} className="mt-5 space-y-4">
+                {signup && (
+                  <Input
+                    label="Full name"
+                    placeholder="Your full name"
+                    autoComplete="name"
+                    required
+                    maxLength={200}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                )}
+                <Input
+                  label="Email address"
+                  type="email"
+                  placeholder="you@company.com"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <PasswordInput
+                  placeholder={
+                    signup ? "At least 15 characters" : "Enter your password"
+                  }
+                  autoComplete={signup ? "new-password" : "current-password"}
+                  required
+                  minLength={signup ? 15 : 1}
+                  maxLength={signup ? 128 : 256}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {error && (
+                  <p
+                    role="alert"
+                    className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs leading-5 text-destructive"
+                  >
+                    {error}
+                  </p>
+                )}
+                <Button type="submit" disabled={busy} className="w-full">
+                  {busy ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      {signup ? "Create account" : "Sign in"}
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </Button>
+              </form>
+              <div className="mt-5 border-t border-border pt-4 text-center text-xs text-muted-foreground">
+                {admin ? (
+                  <>
+                    {signup
+                      ? "Already have an account?"
+                      : "Need an admin account?"}{" "}
+                    <Link
+                      className="font-semibold text-primary hover:underline"
+                      to={signup ? "/admin-signin" : "/admin-signup"}
+                    >
+                      {signup ? "Sign in" : "Initial admin setup"}
+                    </Link>
+                  </>
+                ) : (
+                  <>Need an account? Ask your administrator.</>
+                )}
+              </div>
+              <Link
+                to={admin ? "/user-signin" : "/admin-signin"}
+                className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                {admin
+                  ? "Sign in as a team member"
+                  : "Sign in as an administrator"}
+                <ArrowUpRight size={13} />
+              </Link>
+            </div>
+          </div>
+          <footer className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+            <span>© {new Date().getFullYear()} TaskMaster</span>
+            <span className="flex items-center gap-1.5">
+              <CheckCheck size={14} />A little more organized.
+            </span>
+          </footer>
         </section>
       </main>
-      <footer className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-6 text-[11px] text-muted-foreground lg:px-12">
-        <span>© {new Date().getFullYear()} TaskMaster</span>
-        <span className="flex items-center gap-1.5">
-          <CheckCheck size={14} />A little more organized.
-        </span>
-      </footer>
     </div>
   );
 }

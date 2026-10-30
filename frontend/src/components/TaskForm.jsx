@@ -263,22 +263,11 @@ export default function TaskForm({ mode = "create" }) {
                 </div>
               )}
               <div className="space-y-2">
-                <label
-                  htmlFor="task-notes"
-                  className="block text-xs font-semibold"
-                >
-                  {create
-                    ? "A little context"
-                    : admin
-                      ? "Admin notes"
-                      : "Progress notes"}{" "}
-                  <span className="font-normal text-muted-foreground">
-                    (optional)
-                  </span>
-                </label>
-                <textarea
+                <Input
                   id="task-notes"
-                  className="field min-h-[140px] resize-y leading-6"
+                  label={`${create ? "A little context" : admin ? "Admin notes" : "Progress notes"} (optional)`}
+                  multiline
+                  minRows={4}
                   placeholder="Share useful details, links, or a little direction…"
                   value={comments}
                   onChange={(event) => setComments(event.target.value)}

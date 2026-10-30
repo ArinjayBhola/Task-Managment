@@ -6,6 +6,7 @@ import UserTaskCard from "../../components/UserTaskCard";
 import HomeShimmer from "../../components/HomeShimmer";
 import { toggleCreateUser } from "../../redux/slice/createUserSlice";
 import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 import {
   PageHeading,
   Metrics,
@@ -111,26 +112,25 @@ export default function User() {
                 ))}
               </div>
               <div className="relative w-full sm:w-64">
-                <Search
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-                <input
-                  aria-label="Search team members"
+                <Input
+                  label="Search team members"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by name or email…"
-                  className="field !py-2 !pl-9 !pr-8 text-xs"
+                  startAdornment={<Search size={14} />}
+                  endAdornment={
+                    search ? (
+                      <button
+                        aria-label="Clear search"
+                        onClick={() => setSearch("")}
+                        type="button"
+                        className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-muted"
+                      >
+                        <X size={13} />
+                      </button>
+                    ) : undefined
+                  }
                 />
-                {search && (
-                  <button
-                    aria-label="Clear search"
-                    onClick={() => setSearch("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
               </div>
             </div>
             {filtered.length ? (
