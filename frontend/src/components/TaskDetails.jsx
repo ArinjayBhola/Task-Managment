@@ -1,77 +1,56 @@
 /* eslint-disable react/prop-types */
-import { useNavigate, useLocation } from "react-router-dom";
-import { format, differenceInDays } from "date-fns";
-import { Card } from "./ui/Card";
-import { Button } from "./ui/Button";
-import { Calendar, Clock, AlertCircle } from "lucide-react";
-import clsx from "clsx";
-
-const TaskDetails = ({ task }) => {
+import { useLocation, useNavigate } from "react-router-dom";
+import { CalendarDays, ArrowUpRight, CircleCheck } from "lucide-react";
+import { StatusBadge } from "./workspace/WorkspaceUI";
+import { statusInfo } from "../utils/task-status";
+export default function TaskDetails({ task }) {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "No date";
-    return format(new Date(dateString), "MMM dd, yyyy");
-  };
-
-  const calculateDaysLeft = (dueDate) => {
-    if (!dueDate) return 0;
-    return differenceInDays(new Date(dueDate), new Date());
-  };
-
-  const daysLeft = calculateDaysLeft(task.dueDate);
-  const isUrgent = daysLeft <= 3 && task.status !== "Completed";
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "In Progress":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      default:
-        return "bg-red-500/20 text-red-400 border-red-500/30";
-    }
-  };
-
+  const due = task.dueDate || task.due_date;
+  const date = due ? new Date(due) : null;
+  const validDate = date && !Number.isNaN(date.getTime());
+  const done = statusInfo(task.status).key === "done";
+  const overdue =
+    validDate && date < new Date(new Date().setHours(0, 0, 0, 0)) && !done;
   return (
-    <Card className="mb-4 transition-all duration-300 hover:bg-white/5 group border-white/5">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="space-y-3 flex-1">
-          <div className="flex items-start justify-between">
-            <h3 className="text-lg font-semibold text-white/90 group-hover:text-primary transition-colors">
-              {task.description}
-            </h3>
-            <span className={clsx("px-3 py-1 rounded-full text-xs font-medium border", getStatusColor(task.status))}>
-              {task.status}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
-              <span>Created: {formatDate(task.createdAt)}</span>
-            </div>
-            <div className={clsx("flex items-center gap-1.5", isUrgent && "text-destructive font-medium")}>
-              <Clock className="w-4 h-4" />
-              <span>Due: {formatDate(task.dueDate)}</span>
-              {isUrgent && <AlertCircle className="w-4 h-4" />}
-            </div>
-          </div>
-        </div>
-
+    <div className="group flex items-start gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:border-input sm:items-center">
+      <CircleCheck
+        size={19}
+        strokeWidth={1.5}
+        className={`mt-0.5 shrink-0 sm:mt-0 ${done ? "text-primary" : "text-muted-foreground/60"}`}
+      />
+      <div className="min-w-0 flex-1">
+        <p
+          className={`text-sm font-medium leading-6 ${done ? "text-muted-foreground" : "text-foreground"}`}
+        >
+          {task.title || task.description || "Untitled task"}
+        </p>
+        {task.title && task.description && (
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {task.description}
+          </p>
+        )}
+        <span
+          className={`mt-2 inline-flex items-center gap-1.5 text-[11px] ${overdue ? "text-destructive" : "text-muted-foreground"}`}
+        >
+          <CalendarDays size={12} />
+          {validDate
+            ? `${overdue ? "Overdue · " : ""}${new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date)}`
+            : "No due date"}
+        </span>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+        <StatusBadge status={task.status} />
         {location.pathname === "/mytasks" && (
-          <div className="flex items-center sm:self-center pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 sm:pl-4 sm:border-l sm:ml-4">
-            <Button
-              size="sm"
-              onClick={() => navigate(`/user-edittask/${task.id}`)}>
-              Edit Task
-            </Button>
-          </div>
+          <button
+            aria-label={`Edit ${task.title || task.description || "task"}`}
+            onClick={() => navigate(`/user-edittask/${task.id}`)}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-primary"
+          >
+            <ArrowUpRight size={16} />
+          </button>
         )}
       </div>
-    </Card>
+    </div>
   );
-};
-
-export default TaskDetails;
+}

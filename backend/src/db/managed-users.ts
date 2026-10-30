@@ -41,3 +41,9 @@ export async function userOrganizations(db: Database, userId: string | number) {
   `);
   return rows;
 }
+
+export async function workspaceMemberIds(db: Database, orgId: string | number) {
+  const layout = await membershipLayout(db);
+  const { rows } = await db.execute(sql`SELECT user_id AS "userId" FROM ${layout.table} WHERE ${layout.org} = ${orgId}`);
+  return rows.map(row => String(row.userId));
+}

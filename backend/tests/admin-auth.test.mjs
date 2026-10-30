@@ -37,6 +37,7 @@ function fixture() {
     execute: async (query) => {
       const { sql, params } = new PgDialect().sqlToQuery(query);
       if (sql.includes('to_regclass')) return { rows: [{ legacy: true }] };
+      if (sql.includes('AS "userId"')) return { rows: [{ userId: 42 }] };
       if (sql.includes('WITH new_user')) {
         if (managedUser) throw Object.assign(new Error('duplicate'), { code: '23505' });
         managedUser = { id: 42, name: params[0], email: params[1], passwordHash: params[2] };
@@ -119,6 +120,16 @@ test('an admin can create a user, open their detail page, and sign in with the n
   assert.equal(organizations.status, 200);
   assert.equal((await organizations.json())[0].id, 7);
   assert.equal((await f.request('admin/usersignup', user, userToken)).status, 403);
+  const personal = await f.request('user/bulk', null, userToken);
+  assert.equal(personal.status, 200);
+  assert.equal((await personal.json())[0].id, 42);
+  const team = await f.request('user/bulktask', null, userToken);
+  assert.equal(team.status, 200);
+  assert.equal((await team.json())[0].email, user.email);
+  const forbidden = await f.app.request('/api/v1/user/bulktask', {
+    headers: { Authorization: `Bearer ${userToken}`, 'x-organization-id': 'different-workspace' },
+  }, env);
+  assert.equal(forbidden.status, 403);
 });
 
 test('user creation requires an admin token and validates the form before writing', async () => {

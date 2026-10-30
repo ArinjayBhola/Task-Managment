@@ -4,53 +4,115 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
+    color-scheme: light;
+    --background: 45 20% 97%;
+    --foreground: 160 12% 13%;
+    --card: 0 0% 100%;
+    --primary: 159 68% 27%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 10% 93%;
+    --secondary-foreground: 160 12% 20%;
+    --muted: 45 12% 94%;
+    --muted-foreground: 155 5% 43%;
+    --accent: 155 30% 93%;
+    --accent-foreground: 159 68% 24%;
+    --border: 45 10% 88%;
+    --input: 45 10% 83%;
+    --ring: 159 68% 32%;
+    --destructive: 0 65% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --radius: 0.75rem;
   }
-
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    color-scheme: dark;
+    --background: 160 9% 8%;
+    --foreground: 45 12% 93%;
+    --card: 160 7% 11%;
+    --primary: 155 48% 64%;
+    --primary-foreground: 160 28% 10%;
+    --secondary: 160 6% 17%;
+    --secondary-foreground: 45 12% 90%;
+    --muted: 160 6% 15%;
+    --muted-foreground: 150 5% 61%;
+    --accent: 155 17% 16%;
+    --accent-foreground: 155 48% 72%;
+    --border: 160 5% 21%;
+    --input: 160 5% 28%;
+    --ring: 155 48% 64%;
+    --destructive: 0 75% 68%;
+    --destructive-foreground: 0 25% 10%;
   }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/10;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    font-family: "Inter", "Segoe UI", sans-serif;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 4px;
+  }
+  input[type="date"] {
+    min-width: 0;
+  }
+  textarea {
+    @apply bg-card text-foreground;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 }
-
-.glass {
-  @apply bg-background/60 backdrop-blur-md border border-white/10;
+@layer components {
+  .page-wrap {
+    @apply mx-auto w-full max-w-[1320px] px-5 py-8 sm:px-8 lg:px-10 lg:py-10;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground;
+  }
+  .surface {
+    @apply rounded-xl border border-border bg-card;
+  }
+  .field {
+    @apply w-full rounded-lg border border-input bg-card px-3.5 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary disabled:opacity-60;
+  }
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold whitespace-nowrap;
+  }
+  .glass {
+    @apply border border-border bg-card;
+  }
 }
-
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

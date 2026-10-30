@@ -1,138 +1,119 @@
-import api from "../../utils/axiosInstance";
-import { useEffect, useState } from "react";
-import HomeShimmer from "../../components/HomeShimmer";
+import { useState } from "react";
+import { Search, ListTodo } from "lucide-react";
+import useWorkspaceData from "../../hooks/useWorkspaceData";
 import TaskDetails from "../../components/TaskDetails";
-import { BACKEND_URL } from "../../utils";
-import { Card } from "../../components/ui/Card";
-import { CheckCircle2, Circle, Clock, ListTodo } from "lucide-react";
-import { motion } from "framer-motion";
-
-const MyTask = () => {
-  const [userData, setUserData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api
-      .get(`/user/bulk`)
-      .then((response) => {
-        setUserData(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching tasks!", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
-  let totalTasks = 0;
-  let completedTasks = 0;
-  let inProgressTasks = 0;
-  let notStartedTasks = 0;
-
-  userData.forEach((user) => {
-    // If not, default to empty array
-    const userTasks = user.tasks || [];
-    totalTasks += userTasks.length;
-    userTasks.forEach((task) => {
-      if (task.status === "Completed") completedTasks++;
-      else if (task.status === "In Progress") inProgressTasks++;
-      else if (task.status === "Not Started") notStartedTasks++;
-    });
-  });
-
-  const StatCard = ({ title, value, icon: Icon, colorClass, delay }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}>
-      <Card className="flex items-center gap-4 p-6 border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
-        <div className={`p-3 rounded-xl bg-white/5 ${colorClass}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <div className="text-2xl font-bold text-white">{value}</div>
-        </div>
-      </Card>
-    </motion.div>
+import HomeShimmer from "../../components/HomeShimmer";
+import {
+  PageHeading,
+  Metrics,
+  EmptyState,
+  LoadError,
+} from "../../components/workspace/WorkspaceUI";
+import { statusInfo } from "../../utils/task-status";
+export default function MyTask() {
+  const { data, loading, error, retry } = useWorkspaceData("/user/bulk");
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const users = Array.isArray(data) ? data : [];
+  const tasks = users.flatMap((user) => user.tasks || user.tasksAssigned || []);
+  const filtered = tasks.filter(
+    (task) =>
+      (filter === "all" || statusInfo(task.status).key === filter) &&
+      `${task.title || ""} ${task.description || ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
   );
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 space-y-6">
-        <HomeShimmer />
-        <HomeShimmer />
-      </div>
-    );
-  }
-
-  if (userData.length === 0) {
-    return <div className="text-center py-20 text-muted-foreground">No data found.</div>;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-white mb-6">Task Overview</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Tasks"
-            value={totalTasks}
-            icon={ListTodo}
-            colorClass="text-blue-400 bg-blue-400/10"
-            delay={0}
-          />
-          <StatCard
-            title="Completed"
-            value={completedTasks}
-            icon={CheckCircle2}
-            colorClass="text-green-400 bg-green-400/10"
-            delay={0.1}
-          />
-          <StatCard
-            title="In Progress"
-            value={inProgressTasks}
-            icon={Clock}
-            colorClass="text-yellow-400 bg-yellow-400/10"
-            delay={0.2}
-          />
-          <StatCard
-            title="Not Started"
-            value={notStartedTasks}
-            icon={Circle}
-            colorClass="text-red-400 bg-red-400/10"
-            delay={0.3}
-          />
+    <div className="page-wrap">
+      <PageHeading
+        eyebrow="A little focus goes a long way"
+        title="Make room for good work."
+        description="Your priorities, all in one place. Take it one task at a time."
+        action={
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-[11px] text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            Your personal workspace
+          </span>
+        }
+      />
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <HomeShimmer />
+          <HomeShimmer />
         </div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}>
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-white">Your Tasks</h2>
-          {userData.map((user) => (
-            <div
-              key={user.id}
-              className="space-y-4">
-              {user.tasks?.length === 0 ? (
-                <p className="text-muted-foreground italic">You have no assigned tasks.</p>
-              ) : (
-                user.tasks?.map((task) => (
-                  <TaskDetails
-                    key={task.id}
-                    task={task}
-                  />
-                ))
-              )}
+      ) : error ? (
+        <LoadError retry={retry} />
+      ) : (
+        <>
+          <Metrics users={users} tasks={tasks} personal />
+          <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <h2 className="text-base font-semibold">Your task list</h2>
+              <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
+                {tasks.length} tasks
+              </span>
             </div>
-          ))}
-        </div>
-      </motion.div>
+            <div className="relative sm:w-64">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                className="field !py-2 !pl-9 text-xs"
+                aria-label="Search your tasks"
+                placeholder="Find a task…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="mb-5 flex gap-1 overflow-x-auto border-b border-border pb-3">
+            {[
+              ["all", "All tasks"],
+              ["todo", "To do"],
+              ["progress", "In progress"],
+              ["done", "Completed"],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                aria-pressed={filter === key}
+                className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium ${filter === key ? "bg-accent text-primary" : "text-muted-foreground hover:bg-muted"}`}
+              >
+                {label}{" "}
+                <span className="ml-2 opacity-60">
+                  {key === "all"
+                    ? tasks.length
+                    : tasks.filter(
+                        (task) => statusInfo(task.status).key === key,
+                      ).length}
+                </span>
+              </button>
+            ))}
+          </div>
+          {filtered.length ? (
+            <div className="space-y-3">
+              {filtered.map((task) => (
+                <TaskDetails key={task.id} task={task} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={ListTodo}
+              title={
+                tasks.length
+                  ? "A clear view."
+                  : "Your next chapter starts here."
+              }
+              description={
+                tasks.length
+                  ? "No tasks match this view. Try another filter or search."
+                  : "When your administrator assigns a task, it will appear here. You’re all set for what’s next."
+              }
+            />
+          )}
+        </>
+      )}
     </div>
   );
-};
-
-export default MyTask;
+}

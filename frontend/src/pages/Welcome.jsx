@@ -1,121 +1,221 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { motion } from "framer-motion";
-import { ArrowRight, ShieldCheck, UserCircle2, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  Circle,
+  Layers3,
+  ListTodo,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import Brand from "../components/Brand";
+import { ThemeToggle } from "../components/ThemeProvider";
 import { Button } from "../components/ui/Button";
-
-const WelcomePage = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    if (token) {
-      const decode = jwtDecode(token);
-      if (decode.role === "Admin") {
-        navigate("/users");
-      } else if (decode.role === "User") {
-        navigate("/usertasks");
-      }
-    }
-  }, [token, navigate]);
-
+export default function Welcome() {
+  let account;
+  try {
+    account = jwtDecode(localStorage.getItem("token") || "");
+  } catch {
+    /* Public landing page. */
+  }
+  if (account?.exp > Date.now() / 1000)
+    return (
+      <Navigate to={account.role === "Admin" ? "/users" : "/mytasks"} replace />
+    );
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground flex flex-col">
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-400/10 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-400/10 blur-[100px]" />
-      </div>
-
-      <nav className="relative z-50 flex items-center justify-between px-8 py-6 w-full max-w-7xl mx-auto">
-        <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
-          TaskMaster
+    <div className="min-h-screen">
+      <header className="mx-auto flex h-24 max-w-7xl items-center justify-between gap-4 px-6 lg:px-10">
+        <Brand />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Link
+            to="/user-signin"
+            className="hidden text-xs font-medium text-muted-foreground hover:text-foreground sm:block"
+          >
+            Member sign in
+          </Link>
+          <Link to="/admin-signin">
+            <Button variant="outline" size="sm">
+              Admin portal
+              <ArrowUpRight size={13} />
+            </Button>
+          </Link>
         </div>
-      </nav>
-
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 pt-8 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-4xl mx-auto space-y-8">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-sm text-sm font-medium text-blue-700 dark:text-blue-300 mb-4">
-            <Zap className="w-4 h-4 fill-current" />
-            <span>Manage tasks at lightspeed</span>
-          </motion.div>
-
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground leading-tight">
-            Master Your Workflow <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
-              One Task at a Time.
-            </span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Experience the next generation of task management using our powerful, intuitive, and beautiful interface
-            designed for teams and individuals.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
-            <Link to="/admin-signin">
-              <Button
-                size="lg"
-                className="gap-2 group">
-                <ShieldCheck className="w-5 h-5" />
-                Admin Portal
-                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link to="/user-signin">
-              <Button
-                variant="outline"
-                size="lg"
-                className="gap-2">
-                <UserCircle2 className="w-5 h-5" />
-                User Login
-              </Button>
-            </Link>
+      </header>
+      <main className="mx-auto max-w-7xl px-6 lg:px-10">
+        <section className="grid items-center gap-12 pb-20 pt-12 lg:min-h-[610px] lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-24 lg:pt-14">
+          <div>
+            <p className="mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.13em]">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />A calmer
+              way to work
+            </p>
+            <h1 className="max-w-lg text-[48px] font-medium leading-[1.08] tracking-[-2.5px] sm:text-[64px] lg:text-[70px]">
+              Less scattered.
+              <br />
+              More{" "}
+              <span className="font-serif italic text-primary">together.</span>
+            </h1>
+            <p className="mt-6 max-w-md text-sm leading-7 text-muted-foreground">
+              A thoughtful home for your people, priorities, and next big idea.
+              Find your focus and make a little progress, every day.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/admin-signup">
+                <Button size="lg">
+                  Build your workspace
+                  <ArrowRight size={15} />
+                </Button>
+              </Link>
+              <Link to="/user-signin">
+                <Button variant="outline" size="lg">
+                  Join your team
+                </Button>
+              </Link>
+            </div>
+            <p className="mt-5 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <Check size={13} className="text-primary" />
+              Simple by design. Built around your team.
+            </p>
           </div>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 max-w-6xl mx-auto w-full px-4">
+          <div className="relative rounded-2xl border border-border bg-accent p-4 sm:p-7">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="eyebrow !text-accent-foreground">
+                A little clarity looks like this
+              </span>
+              <span className="text-primary">
+                <Layers3 size={17} />
+              </span>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <span className="flex items-center gap-2 text-xs font-semibold">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-primary text-primary-foreground">
+                    <Check size={12} />
+                  </span>
+                  The everyday workspace
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  Preview
+                </span>
+              </div>
+              <div className="p-5 sm:p-6">
+                <p className="text-[10px] text-muted-foreground">
+                  A fresh start. A clear direction.
+                </p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                  Let’s make things happen.
+                </h2>
+                <div className="my-5 grid grid-cols-3 gap-2">
+                  {[
+                    ["12", "On the list"],
+                    ["4", "In motion"],
+                    ["8", "All done"],
+                  ].map(([value, label]) => (
+                    <div
+                      key={label}
+                      className="rounded-lg border border-border p-3"
+                    >
+                      <span className="text-xl font-semibold tracking-tight">
+                        {value}
+                      </span>
+                      <p className="mt-1 text-[9px] text-muted-foreground">
+                        {label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-xs font-semibold">Today’s priorities</h3>
+                  <span className="text-[10px] text-muted-foreground">
+                    Keep it simple
+                  </span>
+                </div>
+                {[
+                  ["Map out the next big idea", "In progress"],
+                  ["Bring the team up to speed", "To do"],
+                  ["Celebrate a small win", "Completed"],
+                ].map(([title, status], i) => (
+                  <div
+                    key={title}
+                    className="flex items-center gap-2 border-t border-border py-3.5"
+                  >
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${i === 2 ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}
+                    >
+                      {i === 2 && <Check size={10} />}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[11px]">{title}</span>
+                    <span
+                      className={`rounded px-1.5 py-1 text-[8px] ${i === 2 ? "bg-accent text-primary" : i === 0 ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}
+                    >
+                      {status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Circle size={8} className="fill-primary text-primary" />
+                Everything has its place.
+              </span>
+              <span>Yours included.</span>
+            </div>
+          </div>
+        </section>
+        <section className="grid gap-8 border-t border-border py-12 md:grid-cols-3">
           {[
             {
-              title: "Real-time Tracking",
-              icon: "🚀",
-              desc: "Monitor your progress in real-time with dynamic dashboards.",
+              icon: ListTodo,
+              number: "01",
+              title: "Know what comes next.",
+              description:
+                "Clear tasks, thoughtful details, and deadlines that keep your day in perspective.",
             },
             {
-              title: "Team Collaboration",
-              icon: "👥",
-              desc: "Assign tasks and collaborate with your team seamlessly.",
+              icon: Users,
+              number: "02",
+              title: "Move forward together.",
+              description:
+                "A shared view of your team’s work. Everyone knows where they fit.",
             },
-            { title: "Secure & Reliable", icon: "🔒", desc: "Enterprise-grade security for your data." },
-          ].map((feature, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + idx * 0.1 }}
-              viewport={{ once: true }}
-              className="p-6 rounded-2xl bg-background/80 border border-border backdrop-blur-sm hover:bg-accent transition-colors text-left">
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-bold mb-2 text-foreground">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.desc}</p>
-            </motion.div>
+            {
+              icon: ShieldCheck,
+              number: "03",
+              title: "A place for everyone.",
+              description:
+                "Dedicated spaces for admins and team members, with just what each person needs.",
+            },
+          ].map(({ icon: Icon, number, title, description }) => (
+            <article key={number}>
+              <div className="mb-5 flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-primary">
+                  <Icon size={18} />
+                </span>
+                <span className="text-xs text-muted-foreground">{number}</span>
+              </div>
+              <h2 className="text-sm font-semibold">{title}</h2>
+              <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                {description}
+              </p>
+            </article>
           ))}
-        </div>
+        </section>
       </main>
-
-      <footer className="relative z-10 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} TaskMaster. All rights reserved.
+      <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-7 text-[11px] text-muted-foreground lg:px-10">
+        <span>
+          © {new Date().getFullYear()} TaskMaster. A little more organized.
+        </span>
+        <Link
+          to="/admin-signin"
+          className="flex items-center gap-1 hover:text-primary"
+        >
+          Your workspace awaits
+          <ArrowUpRight size={12} />
+        </Link>
       </footer>
     </div>
   );
-};
-
-export default WelcomePage;
+}

@@ -1,91 +1,92 @@
-import { Button } from "../../components/ui/Button";
-import api from "../../utils/axiosInstance";
-import { jwtDecode } from "jwt-decode";
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, Plus, Mail } from "lucide-react";
+import useWorkspaceData from "../../hooks/useWorkspaceData";
 import HomeShimmer from "../../components/HomeShimmer";
 import TaskDetails from "../../components/TaskDetails";
-import { BACKEND_URL } from "../../utils";
-import { Card } from "../../components/ui/Card";
-import { Plus } from "lucide-react";
-
-const SingleUser = () => {
+import { Button } from "../../components/ui/Button";
+import {
+  PageHeading,
+  Metrics,
+  EmptyState,
+  LoadError,
+} from "../../components/workspace/WorkspaceUI";
+export default function SingleUser() {
   const { userId } = useParams();
-  const [userData, setUserData] = useState(null);
-  const [role, setRole] = useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decodedToken = jwtDecode(token);
-        setRole(decodedToken.role);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    api
-      .get(`/admin/user/${userId}`)
-      .then((response) => {
-        setUserData(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-      });
-  }, [userId]);
-
-  const handleCreateTask = () => {
-    if (userData) {
-      navigate(`/task/${userData.id}`);
-    }
-  };
-
-  if (!userData) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <HomeShimmer />
-      </div>
-    );
-  }
-
+  const {
+    data: user,
+    loading,
+    error,
+    retry,
+  } = useWorkspaceData(`/admin/user/${userId}`);
+  const tasks = user?.tasks || user?.tasksAssigned || [];
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card className="border-white/10 bg-card/30 p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">{userData.name}</h1>
-            <p className="text-muted-foreground">Managing {userData.tasks?.length || 0} tasks</p>
+    <div className="page-wrap">
+      <Link
+        to="/users"
+        className="mb-7 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"
+      >
+        <ArrowLeft size={14} />
+        Back to your team
+      </Link>
+      {loading ? (
+        <HomeShimmer />
+      ) : error ? (
+        <LoadError retry={retry} message="We couldn’t load this team member." />
+      ) : (
+        <>
+          <PageHeading
+            eyebrow="Team member"
+            title={user?.name || "Team member"}
+            description={
+              <span className="inline-flex items-center gap-2">
+                <Mail size={13} />
+                {user?.email}
+              </span>
+            }
+            action={
+              <Link to={`/task/${userId}`}>
+                <Button>
+                  <Plus size={15} />
+                  Assign a task
+                </Button>
+              </Link>
+            }
+          />
+          <Metrics users={[user]} tasks={tasks} personal />
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-base font-semibold">Assigned tasks</h2>
+            <span className="text-xs text-muted-foreground">
+              {tasks.length} total
+            </span>
           </div>
-
-          {role === "Admin" && (
-            <Button
-              onClick={handleCreateTask}
-              className="gap-2">
-              <Plus className="w-4 h-4" />
-              Create new task
-            </Button>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          {userData.tasks?.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground">No tasks assigned to this user.</p>
+          {tasks.length ? (
+            <div className="space-y-3">
+              {tasks.map((task) => (
+                <Link
+                  className="block"
+                  to={`/admin-edittask/${task.id}`}
+                  key={task.id}
+                >
+                  <TaskDetails task={task} />
+                </Link>
+              ))}
+            </div>
           ) : (
-            userData.tasks?.map((task) => (
-              <TaskDetails
-                key={task.id}
-                task={task}
-              />
-            ))
+            <EmptyState
+              title="A fresh start for good work."
+              description="Give this teammate their first task. A clear assignment is the beginning of real progress."
+              action={
+                <Link to={`/task/${userId}`}>
+                  <Button variant="outline">
+                    <Plus size={14} />
+                    Assign first task
+                  </Button>
+                </Link>
+              }
+            />
           )}
-        </div>
-      </Card>
+        </>
+      )}
     </div>
   );
-};
-
-export default SingleUser;
+}

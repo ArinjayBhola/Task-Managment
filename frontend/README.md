@@ -1,5 +1,18 @@
 # React + Vite
 
+TaskMaster includes admin and member workspaces, with solid-color light and dark
+themes. Use the sun/moon control in the header to switch; the preference is saved
+on this browser. A new browser defaults to its system appearance.
+
+Run `npm install` and `npm run dev`, with the backend running on port 8787.
+Run `npm run build` and `npm run lint` before committing.
+
+Browser checks: run `npx playwright install chromium --only-shell` once, then
+`npm run test:ui`. Tests use mocked API responses to exercise both roles, both
+themes, search, filters, dialogs, password controls, and mobile navigation.
+They start a dedicated Vite server on port 4179 and save screenshots under
+`test-results/` (ignored by Git).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

@@ -1,54 +1,85 @@
-import api from "../../utils/axiosInstance";
-import { useEffect, useState } from "react";
-import HomeShimmer from "../../components/HomeShimmer";
+import { useState } from "react";
+import { Search, Users } from "lucide-react";
+import useWorkspaceData from "../../hooks/useWorkspaceData";
 import UserTaskCard from "../../components/UserTaskCard";
-import { BACKEND_URL } from "../../utils";
-import { motion } from "framer-motion";
-
-const AllUser = () => {
-  const [userTask, setUserTask] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api
-      .get(`/user/bulktask`)
-      .then((response) => {
-        setUserTask(response.data);
-      })
-      .catch((e) => console.error(e))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const reverseArray = [...userTask].reverse();
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl space-y-4">
-        <HomeShimmer />
-        <HomeShimmer />
-      </div>
-    );
-  }
-
+import HomeShimmer from "../../components/HomeShimmer";
+import {
+  PageHeading,
+  Metrics,
+  EmptyState,
+  LoadError,
+} from "../../components/workspace/WorkspaceUI";
+export default function AllUser() {
+  const { data, loading, error, retry } = useWorkspaceData("/user/bulktask");
+  const [search, setSearch] = useState("");
+  const users = Array.isArray(data) ? data : [];
+  const tasks = [
+    ...new Map(
+      users
+        .flatMap((user) => user.tasks || user.tasksAssigned || [])
+        .map((task) => [task.id, task]),
+    ).values(),
+  ];
+  const filtered = users.filter((user) =>
+    `${user.name} ${user.email}`.toLowerCase().includes(search.toLowerCase()),
+  );
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <h1 className="text-3xl font-bold text-white mb-8">All Users Task Status</h1>
-      <div className="space-y-6">
-        {reverseArray.length > 0 ? (
-          reverseArray.map((user, idx) => (
-            <motion.div
-              key={user.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}>
-              <UserTaskCard user={user} />
-            </motion.div>
-          ))
-        ) : (
-          <div className="text-center text-muted-foreground py-12">No users found.</div>
-        )}
-      </div>
+    <div className="page-wrap">
+      <PageHeading
+        eyebrow="Better, together"
+        title="One team. A shared direction."
+        description="See what everyone is working on and how the pieces come together."
+      />
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <HomeShimmer />
+          <HomeShimmer />
+        </div>
+      ) : error ? (
+        <LoadError retry={retry} />
+      ) : (
+        <>
+          <Metrics users={users} tasks={tasks} />
+          <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <h2 className="text-base font-semibold">
+              Around your workspace{" "}
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                {users.length} members
+              </span>
+            </h2>
+            <div className="relative sm:w-64">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                aria-label="Search team members"
+                className="field !py-2 !pl-9 text-xs"
+                placeholder="Find a teammate…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          {filtered.length ? (
+            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+              {filtered.map((user) => (
+                <UserTaskCard key={user.id} user={user} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Users}
+              title="A little room for your team."
+              description={
+                search
+                  ? "No teammates match that search."
+                  : "Your workspace members will appear here."
+              }
+            />
+          )}
+        </>
+      )}
     </div>
   );
-};
-export default AllUser;
+}

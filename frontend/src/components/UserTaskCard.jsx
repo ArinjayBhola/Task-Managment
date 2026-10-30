@@ -1,77 +1,105 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import TaskDetails from "./TaskDetails";
-import { Button } from "./ui/Button";
-import { Card } from "./ui/Card";
-import { UserCircle } from "lucide-react";
-
-const UserTaskCard = ({ user }) => {
-  const [userRole, setUserRole] = useState("");
-  const location = useLocation();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decode = jwtDecode(token);
-        setUserRole(decode.role);
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  }, []);
-
+import { ArrowUpRight, Plus, Check } from "lucide-react";
+import { StatusBadge } from "./workspace/WorkspaceUI";
+import { statusInfo } from "../utils/task-status";
+export default function UserTaskCard({ user }) {
+  const admin = useLocation().pathname === "/users";
+  const tasks = user.tasks || user.tasksAssigned || [];
+  const completed = tasks.filter(
+    (task) => statusInfo(task.status).key === "done",
+  ).length;
+  const initials = (user.name || user.email || "Team member")
+    .split(" ")
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
   return (
-    <Card className="mb-6 border-white/10 bg-card/30">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <UserCircle className="w-6 h-6" />
-          </div>
-          <div className="text-xl font-bold text-foreground">
-            {userRole === "Admin" ? (
-              <Link
-                to={`/user/${user.id}`}
-                className="hover:text-primary transition-colors">
-                {user.name}
+    <article className="surface flex h-full flex-col overflow-hidden transition-colors hover:border-input">
+      <div className="flex items-center gap-3 p-5">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-sm font-semibold text-accent-foreground">
+          {initials}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-semibold">
+            {admin ? (
+              <Link className="hover:text-primary" to={`/user/${user.id}`}>
+                {user.name || "Team member"}
               </Link>
             ) : (
-              <span>{user.name}</span>
+              user.name || "Team member"
             )}
-            <span className="text-sm font-normal text-muted-foreground ml-2">({user.tasks?.length || 0} tasks)</span>
-          </div>
+          </h3>
+          <p className="mt-1 truncate text-[11px] text-muted-foreground">
+            {user.email}
+          </p>
         </div>
-
-        {location.pathname === "/users" && (
-          <Link to={`/task/${user.id}`}>
-            <Button size="sm">Create new task</Button>
+        {admin && (
+          <Link
+            to={`/user/${user.id}`}
+            aria-label={`View ${user.name}`}
+            className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-primary"
+          >
+            <ArrowUpRight size={17} />
           </Link>
         )}
       </div>
-
-      <div className="space-y-4">
-        {user.tasks?.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground italic">No tasks assigned yet.</div>
-        ) : (
-          user.tasks?.map((task) => (
-            <div key={task.id}>
-              {location.pathname === "/users" ? (
-                <Link
-                  to={`/admin-edittask/${task.id}`}
-                  className="block">
-                  <TaskDetails task={task} />
-                </Link>
-              ) : (
-                <TaskDetails task={task} />
-              )}
+      <div className="mx-5 border-t border-border py-4">
+        <div className="mb-2.5 flex items-center justify-between text-[11px]">
+          <span className="text-muted-foreground">Task progress</span>
+          <span className="font-medium">
+            {completed}
+            <span className="text-muted-foreground">
+              {" "}
+              / {tasks.length} complete
+            </span>
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{
+              width: `${tasks.length ? (completed / tasks.length) * 100 : 0}%`,
+            }}
+          />
+        </div>
+      </div>
+      <div className="min-h-[104px] flex-1 space-y-3 px-5 pb-5">
+        {tasks.length ? (
+          tasks.slice(0, 2).map((task) => (
+            <div key={task.id} className="flex items-center gap-2.5">
+              <span
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${statusInfo(task.status).key === "done" ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}
+              >
+                {statusInfo(task.status).key === "done" && <Check size={11} />}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                {task.title || task.description || "Untitled task"}
+              </span>
+              <StatusBadge status={task.status} />
             </div>
           ))
+        ) : (
+          <p className="rounded-lg bg-background px-3 py-4 text-center text-xs leading-5 text-muted-foreground">
+            A clear slate. No tasks assigned yet.
+          </p>
+        )}
+        {tasks.length > 2 && (
+          <p className="pl-6 text-[11px] text-muted-foreground">
+            +{tasks.length - 2} more tasks
+          </p>
         )}
       </div>
-    </Card>
+      {admin && (
+        <Link
+          to={`/task/${user.id}`}
+          className="flex items-center justify-center gap-2 border-t border-border bg-background/50 px-5 py-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+        >
+          <Plus size={14} />
+          Assign a task
+        </Link>
+      )}
+    </article>
   );
-};
-
-export default UserTaskCard;
+}

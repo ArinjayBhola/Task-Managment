@@ -1,18 +1,12 @@
-import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const useAuthenticate = () => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    alert("Please login first");
-    setTimeout(() => {
-      navigate("/");
-    }, 0);
+  try {
+    const account = jwtDecode(localStorage.getItem("token") || "");
+    return account.exp > Date.now() / 1000;
+  } catch {
     return false;
   }
-
-  return true;
 };
 
 export default useAuthenticate;

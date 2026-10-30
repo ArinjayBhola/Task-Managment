@@ -5,104 +5,98 @@ import { useNavigate } from "react-router-dom";
 import { toggleCreateUser } from "../redux/slice/createUserSlice";
 import { Modal } from "./ui/Modal";
 import { Input } from "./ui/Input";
+import PasswordInput from "./ui/PasswordInput";
 import { Button } from "./ui/Button";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-
-const CreateUserCard = () => {
+import { Notice } from "./workspace/WorkspaceUI";
+import { ArrowRight, Loader2, Users } from "lucide-react";
+export default function CreateUserCard() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
+  const [error, setError] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const postUser = async () => {
+  const close = () => {
+    if (!loading) dispatch(toggleCreateUser());
+  };
+  async function submit(event) {
+    event.preventDefault();
     setLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
-
+    setError("");
     try {
-      const response = await api.post(`/admin/usersignup`, { name, email, password });
-      if (response.status === 200 || response.status === 201) {
-        setSuccessMessage("User created successfully!");
-        setTimeout(() => {
-          navigate(`/user/${response.data.id}`);
-          dispatch(toggleCreateUser());
-        }, 1000);
-      }
-    } catch (error) {
-      setErrorMessage(error.response?.data?.message || error.response?.data?.error || "Error creating user. Please try again.");
+      const { data } = await api.post("/admin/usersignup", {
+        name,
+        email,
+        password,
+      });
+      dispatch(toggleCreateUser());
+      navigate(`/user/${data.id}`);
+    } catch (failure) {
+      setError(
+        failure.response?.data?.message ||
+          "We couldn’t add this teammate. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
-  };
-
+  }
   return (
-    <Modal
-      isOpen={true}
-      onClose={() => dispatch(toggleCreateUser())}
-      title="Create New User">
-      <div className="space-y-4">
-        {successMessage && (
-          <div className="p-3 text-sm text-green-700 dark:text-green-400 bg-green-500/10 border border-green-500/20 rounded-md">
-            {successMessage}
-          </div>
-        )}
-
-        {errorMessage && (
-          <div role="alert" className="p-3 text-sm text-red-700 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-md">
-            {errorMessage}
-          </div>
-        )}
-
+    <Modal isOpen onClose={close} title="A new face on your team">
+      <div className="mb-6 flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+          <Users size={19} />
+        </span>
+        <p className="text-xs leading-6 text-muted-foreground">
+          Create their account and a workspace. Share the credentials with your
+          teammate so they can get started.
+        </p>
+      </div>
+      <form onSubmit={submit} className="space-y-5">
         <Input
-          label="Name"
-          placeholder="John Doe"
+          label="Full name"
+          placeholder="e.g. Alex Morgan"
+          autoComplete="name"
+          required
+          maxLength={200}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-
         <Input
-          label="Email"
+          label="Email address"
           type="email"
-          placeholder="john@example.com"
+          placeholder="alex@company.com"
+          autoComplete="email"
+          required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-
-          <Input
-            label="Password"
-            type={isPasswordVisible ? "text" : "password"}
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            endAdornment={
-          <button
-            type="button"
-            onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-            aria-label={isPasswordVisible ? "Hide password" : "Show password"}
-            aria-pressed={isPasswordVisible}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors">
-            {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-            }
-          />
-
-        <div className="pt-2">
-          <Button
-            className="w-full"
-            onClick={postUser}
-            disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create User"}
+        <PasswordInput
+          placeholder="At least 6 characters"
+          autoComplete="new-password"
+          required
+          minLength={6}
+          maxLength={256}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && <Notice>{error}</Notice>}
+        <div className="flex justify-end gap-2 border-t border-border pt-5">
+          <Button variant="outline" onClick={close} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <>
+                Create member
+                <ArrowRight size={15} />
+              </>
+            )}
           </Button>
         </div>
-      </div>
+      </form>
     </Modal>
   );
-};
-
-export default CreateUserCard;
+}

@@ -23,74 +23,85 @@ function App() {
     "/user-signin",
     "/",
   ];
+  const Content = noHeaderRoutes.includes(location.pathname) ? "div" : "main";
 
   return (
     <Provider store={appStore}>
-      {!noHeaderRoutes.includes(location.pathname) && <Header />}
-      <Routes>
-        <Route path="/" element={<Welcome />} />
+      <div
+        className={
+          noHeaderRoutes.includes(location.pathname)
+            ? ""
+            : "min-h-screen lg:pl-60"
+        }
+      >
+        {!noHeaderRoutes.includes(location.pathname) && <Header />}
+        <Content id="workspace-content">
+          <Routes>
+            <Route path="/" element={<Welcome />} />
 
-        <Route path="/admin-signin" element={<AdminSignin />} />
-        <Route path="/admin-signup" element={<AdminSignup />} />
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute>
-              <User />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/task/:id"
-          element={
-            <ProtectedRoute>
-              <CreateNewTask />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-edittask/:id"
-          element={
-            <ProtectedRoute>
-              <AdminEditTask />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user/:userId"
-          element={
-            <ProtectedRoute>
-              <SingleUser />
-            </ProtectedRoute>
-          }
-        />
+            <Route path="/admin-signin" element={<AdminSignin />} />
+            <Route path="/admin-signup" element={<AdminSignup />} />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <User />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/task/:id"
+              element={
+                <ProtectedRoute>
+                  <CreateNewTask />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-edittask/:id"
+              element={
+                <ProtectedRoute>
+                  <AdminEditTask />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user/:userId"
+              element={
+                <ProtectedRoute>
+                  <SingleUser />
+                </ProtectedRoute>
+              }
+            />
 
-        <Route path="/user-signin" element={<UserSignin />} />
-        <Route
-          path="/mytasks"
-          element={
-            <ProtectedRoute>
-              <MyTask />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/usertasks"
-          element={
-            <ProtectedRoute>
-              <AllUser />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user-edittask/:id"
-          element={
-            <ProtectedRoute>
-              <UserEditTask />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+            <Route path="/user-signin" element={<UserSignin />} />
+            <Route
+              path="/mytasks"
+              element={
+                <ProtectedRoute>
+                  <MyTask />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/usertasks"
+              element={
+                <ProtectedRoute>
+                  <AllUser />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-edittask/:id"
+              element={
+                <ProtectedRoute>
+                  <UserEditTask />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Content>
+      </div>
     </Provider>
   );
 }

@@ -4,7 +4,8 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "../db";
 import { users } from "../db/schema";
-import { userOrganizations } from "../db/managed-users";
+import { userOrganizations, workspaceMemberIds } from "../db/managed-users";
+import { loadDashboardUsers } from "../db/dashboard";
 import { authMiddleware } from "../middleware/auth";
 import { verifyPassword } from "../utils/password";
 import { Bindings, Variables } from "../types";
@@ -40,5 +41,23 @@ export function createUserAuthRouter(databaseFactory = getDb) {
     if (payload.role !== "User") return c.json({ message: "User access required." }, 403);
     return c.json(await userOrganizations(databaseFactory(c.env.DATABASE_URL), payload.id));
   });
+
+  for (const path of ["/bulk", "/bulktask"] as const) {
+    router.get(path, async (c) => {
+      const payload = c.get("jwtPayload");
+      if (payload.role !== "User") return c.json({ message: "User access required." }, 403);
+      const db = databaseFactory(c.env.DATABASE_URL);
+      const organizations = await userOrganizations(db, payload.id);
+      const requested = c.req.header("x-organization-id") || c.req.header("X-Org-ID");
+      const active = requested ? organizations.find(org => String(org.id) === requested) : organizations[0];
+      if (!active) return requested ? c.json({ message: "Workspace access denied." }, 403) : c.json([]);
+      const memberIds = await workspaceMemberIds(db, active.id as string | number);
+      const allUsers = await loadDashboardUsers(db);
+      return c.json(allUsers.filter(user => memberIds.includes(String(user.id)) && (path === "/bulktask" || String(user.id) === String(payload.id))).map(user => {
+        const tasks = user.tasks.filter(task => String(task.orgId) === String(active.id));
+        return { ...user, tasks, tasksAssigned: tasks };
+      }));
+    });
+  }
   return router;
 }

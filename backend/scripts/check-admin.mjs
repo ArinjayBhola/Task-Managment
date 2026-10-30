@@ -59,6 +59,16 @@ try {
   }, process.env);
   assert.equal(orgResponse.status, 200);
   assert.ok((await orgResponse.json()).some(org => org.id === createdUser.defaultOrgId));
+  for (const path of ['bulk', 'bulktask']) {
+    const response = await app.request(`/api/v1/user/${path}`, {
+      headers: { Authorization: `Bearer ${userToken}`, 'x-organization-id': String(createdUser.defaultOrgId) },
+    }, process.env);
+    assert.equal(response.status, 200);
+    const workspaceUsers = await response.json();
+    assert.equal(workspaceUsers.length, 1);
+    assert.equal(workspaceUsers[0].id, createdUser.id);
+    assert.equal('passwordHash' in workspaceUsers[0], false);
+  }
   console.log('Live checks passed: admin auth, user creation, duplicate emails, user detail, user login, and workspace membership.');
 } finally {
   if (createdUser) {

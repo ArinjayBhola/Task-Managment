@@ -1,84 +1,182 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import api from "../../utils/axiosInstance";
-import { Plus } from "lucide-react";
-import { motion } from "framer-motion";
-
+import { Grid2X2, List, Plus, Search, Users, X } from "lucide-react";
 import CreateUserCard from "../../components/CreateUserCard";
-import HomeShimmer from "../../components/HomeShimmer";
 import UserTaskCard from "../../components/UserTaskCard";
+import HomeShimmer from "../../components/HomeShimmer";
 import { toggleCreateUser } from "../../redux/slice/createUserSlice";
-import { BACKEND_URL } from "../../utils";
 import { Button } from "../../components/ui/Button";
+import {
+  PageHeading,
+  Metrics,
+  EmptyState,
+  LoadError,
+} from "../../components/workspace/WorkspaceUI";
+import { statusInfo } from "../../utils/task-status";
+import useWorkspaceData from "../../hooks/useWorkspaceData";
 
-const User = () => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const selector = useSelector((state) => state.createUser);
+export default function User() {
+  const { data, loading, error, retry } = useWorkspaceData("/admin/bulk");
+  const users = Array.isArray(data) ? data : [];
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [view, setView] = useState("grid");
+  const showCreate = useSelector((state) => state.createUser);
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const response = await api.get("/admin/bulk");
-      setData(response.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const reversedData = [...data].reverse();
-
+  const tasks = [
+    ...new Map(
+      users
+        .flatMap((user) => user.tasks || user.tasksAssigned || [])
+        .map((task) => [task.id, task]),
+    ).values(),
+  ];
+  const filtered = users.filter(
+    (user) =>
+      `${user.name} ${user.email}`
+        .toLowerCase()
+        .includes(search.toLowerCase()) &&
+      (filter === "all" ||
+        (user.tasks || []).some(
+          (task) => !["done", "canceled"].includes(statusInfo(task.status).key),
+        )),
+  );
+  const createButton = (
+    <Button onClick={() => dispatch(toggleCreateUser())}>
+      <Plus size={16} />
+      New team member
+    </Button>
+  );
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl relative min-h-screen">
-      {selector && <CreateUserCard />}
-
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-foreground">User Management</h1>
-        <Button
-          onClick={() => dispatch(toggleCreateUser())}
-          className="md:hidden rounded-full w-12 h-12 p-0 flex items-center justify-center fixed bottom-6 right-6 z-40 shadow-2xl">
-          <Plus />
-        </Button>
-        <Button
-          onClick={() => dispatch(toggleCreateUser())}
-          className="hidden md:flex gap-2">
-          <Plus className="w-4 h-4" />
-          Create User
-        </Button>
-      </div>
-
+    <div className="page-wrap">
+      {showCreate && <CreateUserCard />}
+      <PageHeading
+        eyebrow="The big picture"
+        title="Your team, in focus."
+        description="A little clarity for everyone. Keep your people and their priorities moving together."
+        action={createButton}
+      />
       {loading ? (
-        <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
           <HomeShimmer />
           <HomeShimmer />
         </div>
+      ) : error ? (
+        <LoadError retry={retry} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pb-20">
-          {data.length > 0 ? (
-            reversedData.map((user, idx) => (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}>
-                <UserTaskCard user={user} />
-              </motion.div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-20 text-muted-foreground">
-              No users found. Create one to get started.
+        <>
+          <Metrics users={users} tasks={tasks} />
+          <section>
+            <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-3">
+                <h2 className="text-base font-semibold tracking-tight">
+                  Team directory
+                </h2>
+                <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
+                  {users.length} members
+                </span>
+              </div>
+              <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+                <button
+                  aria-label="Grid view"
+                  aria-pressed={view === "grid"}
+                  onClick={() => setView("grid")}
+                  className={`rounded-md p-1.5 ${view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+                >
+                  <Grid2X2 size={15} />
+                </button>
+                <button
+                  aria-label="List view"
+                  aria-pressed={view === "list"}
+                  onClick={() => setView("list")}
+                  className={`rounded-md p-1.5 ${view === "list" ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+                >
+                  <List size={15} />
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+            <div className="mb-5 flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-1">
+                {[
+                  ["all", "All members"],
+                  ["active", "With active tasks"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setFilter(key)}
+                    aria-pressed={filter === key}
+                    className={`rounded-lg px-3 py-2 text-xs font-medium ${filter === key ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  aria-label="Search team members"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name or email…"
+                  className="field !py-2 !pl-9 !pr-8 text-xs"
+                />
+                {search && (
+                  <button
+                    aria-label="Clear search"
+                    onClick={() => setSearch("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            </div>
+            {filtered.length ? (
+              <div
+                className={`grid gap-4 ${view === "grid" ? "md:grid-cols-2 2xl:grid-cols-3" : "grid-cols-1"}`}
+              >
+                {filtered.map((user) => (
+                  <UserTaskCard key={user.id} user={user} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Users}
+                title={
+                  users.length
+                    ? "No matches just yet."
+                    : "Good work starts with good people."
+                }
+                description={
+                  users.length
+                    ? "Try a different name, email, or filter to find your teammate."
+                    : "Add your first team member, then give their next task a place to live."
+                }
+                action={
+                  users.length ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearch("");
+                        setFilter("all");
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  ) : (
+                    createButton
+                  )
+                }
+              />
+            )}
+          </section>
+          <p className="mt-8 text-center text-[11px] text-muted-foreground">
+            A shared view. A clearer way forward.
+          </p>
+        </>
       )}
     </div>
   );
-};
-
-export default User;
+}

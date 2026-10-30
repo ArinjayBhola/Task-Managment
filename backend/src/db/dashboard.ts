@@ -6,6 +6,7 @@ import { users, tasks } from "./schema";
 // Read compatibility for the existing integer-ID database. These definitions
 // are deliberately outside the migration schema; no existing tables are changed.
 const legacyTasks = pgTable("tasks", {
+  orgId: integer("organization_id"),
   id: integer("id"), title: text("title"), description: text("description"),
   status: text("status"), priority: text("priority"), dueDate: timestamp("due_date"),
 });
@@ -26,6 +27,7 @@ export async function loadDashboardUsers(db: ReturnType<typeof getDb>) {
       id: legacyTasks.id, title: legacyTasks.title, description: legacyTasks.description,
       status: legacyTasks.status, priority: legacyTasks.priority, dueDate: legacyTasks.dueDate,
       assigneeId: legacyAssignments.userId,
+      orgId: legacyTasks.orgId,
     }).from(legacyAssignments).innerJoin(legacyTasks, eq(legacyAssignments.taskId, legacyTasks.id));
   }
   return allUsers.map((user) => {
