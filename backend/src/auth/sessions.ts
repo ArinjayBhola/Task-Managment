@@ -34,7 +34,7 @@ function cookieOptions(c: Context) {
     secure,
     sameSite: crossSite ? ("None" as const) : ("Lax" as const),
     path: "/",
-    maxAge: 8 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60,
   };
 }
 export async function issueSession(c: Context, user: SessionUser) {
@@ -48,7 +48,7 @@ export async function issueSession(c: Context, user: SessionUser) {
       sql`DELETE FROM auth_sessions WHERE token_hash=${await digest(old)}`,
     );
   await db.execute(
-    sql`INSERT INTO auth_sessions(token_hash,account_id,role,expires_at) VALUES (${await digest(token)},${user.id}::uuid,${user.role},now()+interval '8 hours')`,
+    sql`INSERT INTO auth_sessions(token_hash,account_id,role,expires_at) VALUES (${await digest(token)},${user.id}::uuid,${user.role},now()+interval '30 days')`,
   );
   setCookie(c, "tm_session", token, cookieOptions(c));
   c.header("Cache-Control", "no-store");
@@ -69,7 +69,7 @@ export async function readSession(c: Context): Promise<SessionUser | null> {
       LEFT JOIN admin_accounts a ON s.role='Admin' AND a.id=s.account_id
       LEFT JOIN users u ON s.role='User' AND u.id=s.account_id
       WHERE s.token_hash=${await digest(token)} AND s.expires_at>now()
-        AND s.last_seen_at>now()-interval '30 minutes' AND (a.id IS NOT NULL OR u.id IS NOT NULL)
+        AND (a.id IS NOT NULL OR u.id IS NOT NULL)
     ) UPDATE auth_sessions s SET last_seen_at=now() FROM valid
       WHERE s.id=valid.session_id RETURNING valid.id,valid.role,valid.name,valid.email
   `);

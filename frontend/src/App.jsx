@@ -1,13 +1,19 @@
 import { Provider } from "react-redux";
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminSignin from "./pages/Admin/AdminSignin";
 import AdminSignup from "./pages/Admin/AdminSignup";
 import SingleUser from "./pages/Admin/SingleUser";
 import User from "./pages/Admin/User";
-import AllUser from "./pages/User/AllUser";
 import MyTask from "./pages/User/MyTask";
 import UserSignin from "./pages/User/UserSignin";
 import Welcome from "./pages/Welcome";
@@ -23,6 +29,15 @@ const UserEditTask = lazy(() => import("./pages/User/UserEditTask"));
 
 function App() {
   const location = useLocation();
+  const { user } = useAuth();
+  const normalizedPath = location.pathname.replace(/\/{2,}/g, "/");
+  if (normalizedPath !== location.pathname)
+    return (
+      <Navigate
+        to={`${normalizedPath}${location.search}${location.hash}`}
+        replace
+      />
+    );
   const noHeaderRoutes = [
     "/admin-signin",
     "/admin-signup",
@@ -107,9 +122,10 @@ function App() {
               <Route
                 path="/usertasks"
                 element={
-                  <ProtectedRoute role="User">
-                    <AllUser />
-                  </ProtectedRoute>
+                  <Navigate
+                    to={user?.role === "Admin" ? "/users" : "/mytasks"}
+                    replace
+                  />
                 }
               />
               <Route
@@ -118,6 +134,21 @@ function App() {
                   <ProtectedRoute role="User">
                     <UserEditTask />
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <Navigate
+                    to={
+                      user
+                        ? user.role === "Admin"
+                          ? "/users"
+                          : "/mytasks"
+                        : "/"
+                    }
+                    replace
+                  />
                 }
               />
             </Routes>

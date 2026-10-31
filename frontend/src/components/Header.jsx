@@ -34,10 +34,7 @@ export default function Header() {
           icon: LayoutDashboard,
         },
       ]
-    : [
-        { to: "/mytasks", label: "My tasks", icon: ListTodo },
-        { to: "/usertasks", label: "Team activity", icon: Users },
-      ];
+    : [{ to: "/mytasks", label: "My tasks", icon: ListTodo }];
   const active =
     location.pathname === "/mytasks"
       ? "My tasks"
@@ -45,11 +42,9 @@ export default function Header() {
         ? "Team management"
         : location.pathname === "/admin/tasks"
           ? "Task assignments"
-          : location.pathname === "/usertasks"
-            ? "Team activity"
-            : location.pathname.startsWith("/user/")
-              ? "Team member"
-              : "Task details";
+          : location.pathname.startsWith("/user/")
+            ? "Team member"
+            : "Task details";
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);

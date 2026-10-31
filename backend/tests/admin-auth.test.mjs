@@ -1,6 +1,33 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fixture, hash } from "./helpers.mjs";
+test("admin and member sessions last 30 days without an inactivity cutoff", async () => {
+  for (const role of ["Admin", "User"]) {
+    const f = await fixture();
+    const response = await f.request(
+      `${role === "Admin" ? "admin" : "user"}/signin`,
+      "POST",
+      {
+        email: role === "Admin" ? "admin@example.test" : "member@example.test",
+        password: "a long unique test passphrase",
+      },
+    );
+    assert.equal(response.status, 200);
+    const header = response.headers.get("set-cookie");
+    assert.match(header, /Max-Age=2592000/i);
+    assert.match(
+      f.queries.find((query) => query.includes("INSERT INTO auth_sessions")),
+      /interval '30 days'/,
+    );
+    assert.equal(
+      (await f.request("auth/session", "GET", null, header.split(";")[0])).status,
+      200,
+    );
+    const validation = f.queries.find((query) => query.includes("WITH valid"));
+    assert.match(validation, /s\.expires_at>now\(\)/);
+    assert.doesNotMatch(validation, /s\.last_seen_at\s*>/);
+  }
+});
 test("login issues an HttpOnly session without exposing a token and logout revokes it", async () => {
   const f = await fixture();
   const response = await f.request("admin/signin", "POST", {

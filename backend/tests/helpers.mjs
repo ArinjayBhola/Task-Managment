@@ -47,9 +47,11 @@ export async function fixture() {
   ];
   const sessions = new Map(),
     attempts = new Map();
+  const queries = [];
   const db = {
     execute: async (query) => {
       const { sql, params: p } = new PgDialect().sqlToQuery(query);
+      queries.push(sql);
       if (sql.includes("WITH valid")) {
         const s = sessions.get(p[0]);
         return { rows: s && !s.expired ? [s.user] : [] };
@@ -142,5 +144,5 @@ export async function fixture() {
     );
     return response.headers.get("set-cookie").split(";")[0];
   };
-  return { app, db, request, login, sessions, accounts };
+  return { app, db, request, login, sessions, accounts, queries };
 }

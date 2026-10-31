@@ -175,8 +175,9 @@ async function setup(page, { role, theme = "light" } = {}) {
       data = { message: "Signed out" };
     } else if (path === "auth/password") data = { user: current };
     else if (path === "admin/usersignup") data = { id: userUuid(1) };
-    else if (path === "admin/bulk" || path === "user/bulktask") data = users;
-    else if (path === "user/bulk") data = [users[0]];
+    else if (path === "admin/bulk") data = users;
+    else if (path === "user/bulk" || path === "user/bulktask")
+      data = [users[0]];
     else if (/^admin\/user\//.test(path)) data = users[0];
     else if (/^(admin\/task|user\/bulktask)\//.test(path))
       data = { ...tasks[0], user: users[0] };
@@ -334,7 +335,7 @@ for (const role of ["Admin", "User"]) {
     await page.getByRole("button", { name: "Open menu" }).click();
     await expect(
       page.getByRole("navigation").getByRole("link", {
-        name: role === "Admin" ? "Team management" : "Team activity",
+        name: role === "Admin" ? "Team management" : "My tasks",
       }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Close menu", exact: true }).click();
@@ -446,6 +447,10 @@ test("member dashboard has no workspace selector and restricts administration ro
   });
   await page.goto("/mytasks");
   await expect(
+    page.getByRole("link", { name: "Team activity", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByText("Jamie Chen", { exact: true })).toHaveCount(0);
+  await expect(
     page.getByRole("link", { name: "Task assignments", exact: true }),
   ).toHaveCount(0);
   await expect(
@@ -459,7 +464,36 @@ test("member dashboard has no workspace selector and restricts administration ro
   expect(organizationRequests).toEqual([]);
   await page.goto("/users");
   await expect(page).toHaveURL(/\/mytasks$/);
+  await page.goto("/usertasks");
+  await expect(page).toHaveURL(/\/mytasks$/);
 });
+
+for (const role of ["Admin", "User"]) {
+  test(`${role} is redirected from public auth routes to their own dashboard`, async ({
+    page,
+    baseURL,
+  }) => {
+    await setup(page, { role });
+    for (const path of [
+      "/",
+      "/admin-signin",
+      "//admin-signin",
+      "/admin-signup",
+      "/user-signin",
+    ]) {
+      await page.goto(`${baseURL}${path}`);
+      await expect(page).toHaveURL(
+        role === "Admin" ? /\/users$/ : /\/mytasks$/,
+      );
+      await expect(
+        page.getByRole("heading", {
+          name: role === "Admin" ? "Team management" : "My tasks",
+          exact: true,
+        }),
+      ).toBeVisible();
+    }
+  });
+}
 
 test("admin console redirects member routes back to management", async ({
   page,

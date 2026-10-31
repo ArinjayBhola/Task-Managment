@@ -14,13 +14,7 @@ export function createUserAuthRouter(databaseFactory = getDb) {
       if (payload.role !== "User")
         return c.json({ message: "User access required." }, 403);
       const db = databaseFactory(c.env.DATABASE_URL);
-      const allUsers = await loadDashboardUsers(db);
-      return c.json(
-        allUsers.filter(
-          (user) =>
-            path === "/bulktask" || String(user.id) === String(payload.id),
-        ),
-      );
+      return c.json(await loadDashboardUsers(db, String(payload.id)));
     });
   }
   return router;
