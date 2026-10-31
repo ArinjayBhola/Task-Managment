@@ -31,7 +31,7 @@ export default function MyTask() {
         title="My tasks"
         description="Your assignments, your progress, your next step. Focus on the work that’s yours."
         action={
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             Personal task view
           </span>
@@ -50,7 +50,7 @@ export default function MyTask() {
           <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
               <h2 className="text-base font-semibold">Your task list</h2>
-              <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
+              <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">
                 {tasks.length} tasks
               </span>
             </div>

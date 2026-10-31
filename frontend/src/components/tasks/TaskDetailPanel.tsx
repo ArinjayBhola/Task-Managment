@@ -147,7 +147,7 @@ const DetailField = ({
       <Icon size={16} />
     </div>
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">
+      <span className="text-xs text-muted-foreground font-bold uppercase tracking-tight">
         {label}
       </span>
       <span className="text-sm font-semibold capitalize">{value}</span>
@@ -167,14 +167,14 @@ const ActivityItem = ({
   isLast?: boolean;
 }) => (
   <div className="flex items-start gap-4 relative">
-    <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold shrink-0 z-10 text-primary">
+    <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold shrink-0 z-10 text-primary">
       {user}
     </div>
     <div className="flex flex-col gap-0.5 pt-0.5">
       <p className="text-xs text-foreground/90">
         <span className="font-bold">{user}</span> {action}
       </p>
-      <span className="text-[10px] text-muted-foreground font-medium">
+      <span className="text-xs text-muted-foreground font-medium">
         {date}
       </span>
     </div>

@@ -8,6 +8,13 @@ type TaskRow = Record<string, unknown> & {
   assigneeId: string | number | null;
   adminComments: string;
   memberComments: string;
+  assigneeName: string | null;
+  assigneeEmail: string | null;
+  workflowRunId: string | null;
+  workflowNodeKey: string | null;
+  workflowState: string | null;
+  requiresApproval: boolean | null;
+  reviewFeedback: string | null;
 };
 
 async function isLegacy(db: Database) {
@@ -53,8 +60,10 @@ export async function listTasks(
     SELECT t.id, t.title, t.description, t.status, t.priority,
       t.due_date AS "dueDate", t.created_at AS "createdAt", t.updated_at AS "updatedAt",
       t.admin_notes AS "adminComments", t.member_notes AS "memberComments",
+      w.run_id AS "workflowRunId", w.node_key AS "workflowNodeKey", w.state AS "workflowState",
+      (w.spec->>'requiresApproval')::boolean AS "requiresApproval", w.feedback AS "reviewFeedback",
       u.id AS "assigneeId", u.name AS "assigneeName", u.email AS "assigneeEmail"
-    FROM tasks t ${join}
+    FROM tasks t ${join} LEFT JOIN workflow_steps w ON w.task_id=t.id
     WHERE ${options.taskId ? sql`t.id::text = ${options.taskId}` : sql`TRUE`}
       AND ${options.userId !== undefined ? sql`u.id::text = ${String(options.userId)}` : sql`TRUE`}
     ORDER BY t.updated_at DESC, t.id DESC
@@ -129,6 +138,13 @@ export async function updateTask(
     dueDate?: string;
   },
 ) {
+  const current = await taskDetail(db, taskId, actor);
+  if (!current) return null;
+  if (current.workflowRunId)
+    throw Object.assign(
+      new Error("Use the workflow actions to update this assignment."),
+      { code: "WORKFLOW_MANAGED" },
+    );
   const legacy = await isLegacy(db);
   const assignments = [];
   if (actor.role === "Admin" && changes.description !== undefined) {
@@ -164,6 +180,14 @@ export async function updateTask(
 }
 
 export async function deleteTask(db: Database, taskId: string) {
+  const { rows: linked } = await db.execute(
+    sql`SELECT id FROM workflow_steps WHERE task_id::text=${taskId}`,
+  );
+  if (linked.length)
+    throw Object.assign(
+      new Error("Cancel the workflow instead of deleting its assignments."),
+      { code: "WORKFLOW_MANAGED" },
+    );
   const legacy = await isLegacy(db);
   // The existing integer-ID database cascades task children. The newer schema
   // needs its comments and activity records removed in the same statement.

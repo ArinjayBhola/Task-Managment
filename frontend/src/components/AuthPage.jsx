@@ -226,7 +226,7 @@ export default function AuthPage({ role = "Admin", signup = false }) {
               </Link>
             </div>
           </div>
-          <footer className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <footer className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>© {new Date().getFullYear()} TaskMaster</span>
             <span className="flex items-center gap-1.5">
               <CheckCheck size={14} />A little more organized.

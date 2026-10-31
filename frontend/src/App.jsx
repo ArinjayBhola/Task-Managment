@@ -26,6 +26,9 @@ import HomeShimmer from "./components/HomeShimmer";
 const AdminEditTask = lazy(() => import("./pages/Admin/AdminEditTask"));
 const CreateNewTask = lazy(() => import("./pages/Admin/CreateNewTask"));
 const UserEditTask = lazy(() => import("./pages/User/UserEditTask"));
+const Workflows = lazy(() => import("./pages/Admin/Workflows"));
+const WorkflowEditor = lazy(() => import("./pages/Admin/WorkflowEditor"));
+const WorkflowRun = lazy(() => import("./pages/Admin/WorkflowRun"));
 
 function App() {
   const location = useLocation();
@@ -65,6 +68,38 @@ function App() {
             }
           >
             <Routes>
+              <Route
+                path="/admin/workflows"
+                element={
+                  <ProtectedRoute role="Admin">
+                    <Workflows />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/workflows/new"
+                element={
+                  <ProtectedRoute role="Admin">
+                    <WorkflowEditor />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/workflows/:templateId/edit"
+                element={
+                  <ProtectedRoute role="Admin">
+                    <WorkflowEditor />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/workflows/runs/:runId"
+                element={
+                  <ProtectedRoute role="Admin">
+                    <WorkflowRun />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/" element={<Welcome />} />
 
               <Route path="/admin-signin" element={<AdminSignin />} />

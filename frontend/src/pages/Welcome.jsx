@@ -42,7 +42,7 @@ export default function Welcome() {
       <main className="mx-auto max-w-7xl px-6 lg:px-10">
         <section className="grid items-center gap-12 pb-20 pt-12 lg:min-h-[610px] lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-24 lg:pt-14">
           <div>
-            <p className="mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.13em]">
+            <p className="mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium uppercase tracking-[0.13em]">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />A calmer
               way to work
             </p>
@@ -69,7 +69,7 @@ export default function Welcome() {
                 </Button>
               </Link>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
               <Check size={13} className="text-primary" />
               Simple by design. Built around your team.
             </p>
@@ -91,12 +91,12 @@ export default function Welcome() {
                   </span>
                   Your team at a glance
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   Preview
                 </span>
               </div>
               <div className="p-5 sm:p-6">
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   A fresh start. A clear direction.
                 </p>
                 <h2 className="mt-1 text-xl font-semibold tracking-tight">
@@ -123,7 +123,7 @@ export default function Welcome() {
                 </div>
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-xs font-semibold">Today’s priorities</h3>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     Keep it simple
                   </span>
                 </div>
@@ -141,7 +141,7 @@ export default function Welcome() {
                     >
                       {i === 2 && <Check size={10} />}
                     </span>
-                    <span className="min-w-0 flex-1 text-[11px]">{title}</span>
+                    <span className="min-w-0 flex-1 text-xs">{title}</span>
                     <span
                       className={`rounded px-1.5 py-1 text-[8px] ${i === 2 ? "bg-accent text-primary" : i === 0 ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}
                     >
@@ -151,7 +151,7 @@ export default function Welcome() {
                 ))}
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-between text-[10px] text-muted-foreground">
+            <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Circle size={8} className="fill-primary text-primary" />
                 Everything has its place.
@@ -199,7 +199,7 @@ export default function Welcome() {
           ))}
         </section>
       </main>
-      <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-7 text-[11px] text-muted-foreground lg:px-10">
+      <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-7 text-xs text-muted-foreground lg:px-10">
         <span>
           © {new Date().getFullYear()} TaskMaster. A little more organized.
         </span>

@@ -34,8 +34,9 @@ export default function DesignTheme({ children }) {
     const control = {
       borderRadius: 8,
       backgroundColor: paper,
-      fontSize: 13,
-      minHeight: 44,
+      fontSize: 14,
+      fontWeight: 500,
+      minHeight: 46,
     };
     return createTheme({
       palette: {
@@ -48,7 +49,14 @@ export default function DesignTheme({ children }) {
         },
         divider: dark ? "#343b37" : "#e3e3de",
       },
-      typography: { fontFamily: 'Inter, "Segoe UI", sans-serif', fontSize: 13 },
+      typography: {
+        fontFamily: 'Inter, "Segoe UI", sans-serif',
+        fontSize: 14,
+        htmlFontSize: 17,
+        fontWeightRegular: 500,
+        fontWeightMedium: 600,
+        fontWeightBold: 700,
+      },
       shape: { borderRadius: 8 },
       components: {
         MuiOutlinedInput: {
@@ -63,11 +71,14 @@ export default function DesignTheme({ children }) {
             notchedOutline: { borderColor: border },
           },
         },
-        MuiInputLabel: { styleOverrides: { root: { fontSize: 13 } } },
+        MuiInputLabel: {
+          styleOverrides: { root: { fontSize: 14, fontWeight: 600 } },
+        },
         MuiMenuItem: {
           styleOverrides: {
             root: {
-              fontSize: 13,
+              fontSize: 14,
+              fontWeight: 500,
               minHeight: 38,
               borderRadius: 5,
               margin: "2px 6px",

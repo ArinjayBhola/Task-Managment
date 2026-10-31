@@ -5,6 +5,7 @@
 
 @layer base {
   :root {
+    font-size: 17px;
     color-scheme: light;
     --background: 45 20% 97%;
     --foreground: 160 12% 13%;
@@ -51,6 +52,7 @@
     margin: 0;
     font-family: "Inter", "Segoe UI", sans-serif;
     font-feature-settings: "cv11", "ss01";
+    font-weight: 500;
   }
   ::selection {
     background: hsl(var(--primary) / 0.18);
@@ -106,7 +108,7 @@
     @apply mx-auto w-full max-w-[1320px] px-5 py-8 sm:px-8 lg:px-10 lg:py-10;
   }
   .eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground;
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground;
   }
   .surface {
     @apply rounded-xl border border-border bg-card;
@@ -115,7 +117,7 @@
     @apply w-full rounded-lg border border-input bg-card px-3.5 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary disabled:opacity-60;
   }
   .status-pill {
-    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold whitespace-nowrap;
   }
   .glass {
     @apply border border-border bg-card;

@@ -7,7 +7,7 @@ async function derive(password: string, salt: Uint8Array) {
     "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"],
   );
   return new Uint8Array(await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt, iterations, hash: "SHA-256" }, key, 256,
+    { name: "PBKDF2", salt: new Uint8Array(salt).buffer, iterations, hash: "SHA-256" }, key, 256,
   ));
 }
 

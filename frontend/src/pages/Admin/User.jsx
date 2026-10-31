@@ -72,7 +72,7 @@ export default function User() {
                 <h2 className="text-base font-semibold tracking-tight">
                   Team directory
                 </h2>
-                <span className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground">
+                <span className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground">
                   {users.length} members
                 </span>
               </div>
@@ -172,7 +172,7 @@ export default function User() {
               />
             )}
           </section>
-          <p className="mt-8 text-center text-[11px] text-muted-foreground">
+          <p className="mt-8 text-center text-xs text-muted-foreground">
             A shared view. A clearer way forward.
           </p>
         </>

@@ -31,7 +31,7 @@ export default function UserTaskCard({ user }) {
               user.name || "Team member"
             )}
           </h3>
-          <p className="mt-1 truncate text-[11px] text-muted-foreground">
+          <p className="mt-1 truncate text-xs text-muted-foreground">
             {user.email}
           </p>
         </div>
@@ -46,7 +46,7 @@ export default function UserTaskCard({ user }) {
         )}
       </div>
       <div className="mx-5 border-t border-border py-4">
-        <div className="mb-2.5 flex items-center justify-between text-[11px]">
+        <div className="mb-2.5 flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Task progress</span>
           <span className="font-medium">
             {completed}
@@ -86,7 +86,7 @@ export default function UserTaskCard({ user }) {
           </p>
         )}
         {tasks.length > 2 && (
-          <p className="pl-6 text-[11px] text-muted-foreground">
+          <p className="pl-6 text-xs text-muted-foreground">
             +{tasks.length - 2} more tasks
           </p>
         )}

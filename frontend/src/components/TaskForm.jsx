@@ -23,6 +23,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import { notify } from "../utils/notifications";
+import { workflowStateLabel } from "./workflows/WorkflowGraph";
 import {
   LoadError,
   Notice,
@@ -65,8 +66,42 @@ export default function TaskForm({ mode = "create" }) {
   const name = create
     ? data?.name
     : data?.user?.name || data?.assignee?.name || "Team member";
+  const workflow = !create && Boolean(data?.workflowRunId);
+  const canWork =
+    workflow &&
+    !admin &&
+    ["ready", "in_progress"].includes(data?.workflowState);
+  async function workflowAction(action) {
+    setSaving(true);
+    setError("");
+    try {
+      await api.post(`/workflow-tasks/${data.id}/actions`, {
+        action,
+        message: comments,
+      });
+      notify(
+        action === "start"
+          ? "Work started."
+          : data.requiresApproval
+            ? "Submitted for admin review."
+            : "Task completed. Next steps unlocked.",
+      );
+      retry();
+    } catch (failure) {
+      setError(
+        failure.response?.data?.message || "Unable to update assignment.",
+      );
+      notify(
+        failure.response?.data?.message || "Unable to update assignment.",
+        "error",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
   async function submit(event) {
     event.preventDefault();
+    if (workflow) return;
     if (admin && (!dueDate || dateInvalid)) {
       setError("Choose a valid due date before assigning this task.");
       return;
@@ -207,12 +242,37 @@ export default function TaskForm({ mode = "create" }) {
             <div className="space-y-6 p-6 sm:p-8">
               {error && <Notice>{error}</Notice>}
               {success && <Notice success>{success}</Notice>}
+              {workflow && (
+                <div className="rounded-lg border border-primary/20 bg-accent p-4">
+                  <p className="text-sm font-semibold text-primary">
+                    {workflowStateLabel(data.workflowState)}
+                  </p>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                    {admin
+                      ? "This assignment belongs to a workflow. Review submissions and manage its progress from the execution view."
+                      : data.workflowState === "in_review"
+                        ? "Your submission is with your admin. We will notify you when it is reviewed."
+                        : data.workflowState === "completed"
+                          ? "This assignment is complete."
+                          : data.workflowState === "canceled"
+                            ? "Your admin canceled this assignment."
+                            : data.requiresApproval
+                              ? "Submit your work when ready. Your admin must approve it before the next step can begin."
+                              : "Complete your assignment to unlock the next step."}
+                  </p>
+                  {data.reviewFeedback && (
+                    <p className="mt-3 whitespace-pre-wrap border-t border-primary/15 pt-3 text-xs leading-6">
+                      Admin feedback: {data.reviewFeedback}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex items-center gap-3 rounded-lg bg-background p-4">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-primary">
                   <UserRound size={17} />
                 </span>
                 <div>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Assigned to
                   </p>
                   <p className="mt-1 text-xs font-semibold">{name}</p>
@@ -223,7 +283,7 @@ export default function TaskForm({ mode = "create" }) {
                 placeholder="e.g. Prepare the first draft of the project proposal"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                readOnly={!admin}
+                readOnly={!admin || workflow}
                 required
                 maxLength={2000}
               />
@@ -233,11 +293,12 @@ export default function TaskForm({ mode = "create" }) {
                   value={dueDate}
                   onChange={setDueDate}
                   onValidationChange={setDateInvalid}
-                  readOnly={!admin}
-                  required={admin}
+                  readOnly={!admin || workflow}
+                  required={admin && !workflow}
                 />
                 <Select
                   label="Status"
+                  disabled={workflow}
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
                   options={[
@@ -270,15 +331,23 @@ export default function TaskForm({ mode = "create" }) {
                   minRows={4}
                   placeholder="Share useful details, links, or a little direction…"
                   value={comments}
+                  readOnly={workflow && !canWork}
                   onChange={(event) => setComments(event.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   A clear note can make all the difference.
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background/50 px-6 py-4">
-              {!create && admin ? (
+              {workflow && admin ? (
+                <Link
+                  to={`/admin/workflows/runs/${data.workflowRunId}`}
+                  className="text-xs font-semibold text-primary"
+                >
+                  View workflow →
+                </Link>
+              ) : !create && admin ? (
                 <Button
                   size="sm"
                   variant="danger"
@@ -296,16 +365,43 @@ export default function TaskForm({ mode = "create" }) {
                   Cancel
                 </Button>
               )}
-              <Button type="submit" disabled={saving}>
-                {saving ? (
-                  <Loader2 size={15} className="animate-spin" />
-                ) : (
-                  <>
-                    {create ? "Assign task" : "Save changes"}
-                    <ArrowRight size={15} />
-                  </>
-                )}
-              </Button>
+              {workflow ? (
+                canWork && (
+                  <div className="flex flex-wrap gap-2">
+                    {data.workflowState === "ready" && (
+                      <Button
+                        variant="outline"
+                        onClick={() => workflowAction("start")}
+                        disabled={saving}
+                      >
+                        Start work
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => workflowAction("submit")}
+                      disabled={saving}
+                    >
+                      {saving
+                        ? "Saving…"
+                        : data.requiresApproval
+                          ? "Submit for review"
+                          : "Complete assignment"}
+                      <ArrowRight size={15} />
+                    </Button>
+                  </div>
+                )
+              ) : (
+                <Button type="submit" disabled={saving}>
+                  {saving ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <>
+                      {create ? "Assign task" : "Save changes"}
+                      <ArrowRight size={15} />
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </form>
           <aside className="surface p-6">
@@ -343,7 +439,7 @@ export default function TaskForm({ mode = "create" }) {
                   />
                   <div>
                     <h4 className="text-xs font-medium">{title}</h4>
-                    <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {copy}
                     </p>
                   </div>

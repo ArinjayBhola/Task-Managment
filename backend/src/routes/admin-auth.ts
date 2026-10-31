@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { getDb } from "../db";
 import { loadDashboardUsers } from "../db/dashboard";
-import { createManagedUser } from "../db/managed-users";
+import { createManagedUser, deleteManagedUser } from "../db/managed-users";
+import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
 import { hashPassword } from "../utils/password";
 import { registration, login, registerAdmin } from "../auth/accounts";
@@ -81,6 +82,56 @@ export function createAdminAuthRouter(databaseFactory = getDb) {
       (entry) => String(entry.id) === c.req.param("userId"),
     );
     return user ? c.json(user) : c.json({ message: "User not found." }, 404);
+  });
+
+  router.delete("/user/:userId", async (c) => {
+    const id = c.req.param("userId");
+    if (!z.string().uuid().safeParse(id).success)
+      return c.json({ message: "User not found." }, 404);
+    const parsed = z
+      .object({ confirmEmail: z.string().trim().email() })
+      .strict()
+      .safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success)
+      return c.json(
+        { message: "Enter the member email address to confirm deletion." },
+        400,
+      );
+    try {
+      const result = await deleteManagedUser(
+        databaseFactory(c.env.DATABASE_URL),
+        id,
+        c.get("currentUser").id,
+        parsed.data.confirmEmail,
+      );
+      return result
+        ? c.json({
+            message: "User and related data permanently deleted.",
+            ...result,
+          })
+        : c.json({ message: "User not found." }, 404);
+    } catch (error) {
+      const cause =
+        (error as { cause?: { code?: string; message?: string } }).cause ||
+        (error as { code?: string; message?: string });
+      if (cause.code === "P0001")
+        return c.json({ message: cause.message }, 409);
+      if (cause.code === "42883")
+        return c.json(
+          {
+            message:
+              "Member deletion setup is required. Run npm run db:members in backend.",
+          },
+          503,
+        );
+      return c.json(
+        {
+          message:
+            "Unable to delete this member. No changes were saved. Please retry.",
+        },
+        503,
+      );
+    }
   });
 
   return router;

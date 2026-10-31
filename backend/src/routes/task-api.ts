@@ -62,6 +62,8 @@ function databaseError(c: AppContext, error: unknown) {
   const code =
     (error as { code?: string; cause?: { code?: string } }).cause?.code ||
     (error as { code?: string }).code;
+  if (code === "WORKFLOW_MANAGED")
+    return c.json({ message: (error as Error).message }, 409);
   if (code === "42703" || code === "23502")
     return c.json(
       {

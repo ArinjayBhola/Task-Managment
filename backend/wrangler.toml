@@ -1,5 +1,8 @@
 name = "task-managment-backend"
 compatibility_date = "2024-07-14"
 
+[triggers]
+crons = ["*/5 * * * *"]
+
 [vars]
 APP_ORIGIN = "https://task-managment-8ihr.vercel.app"

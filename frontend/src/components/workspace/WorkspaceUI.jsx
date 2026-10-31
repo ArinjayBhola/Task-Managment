@@ -28,7 +28,7 @@ export function PageHeading({ eyebrow, title, description, action }) {
         <h1 className="text-[30px] font-semibold leading-tight tracking-[-1.1px] sm:text-[34px]">
           {title}
         </h1>
-        <p className="mt-2.5 max-w-xl text-[13px] leading-6 text-muted-foreground">
+        <p className="mt-2.5 max-w-xl text-sm leading-6 text-muted-foreground">
           {description}
         </p>
       </div>
@@ -90,7 +90,7 @@ export function Metrics({ users, tasks, personal = false }) {
           <div className="text-[30px] font-semibold leading-none tracking-[-1px] tabular-nums">
             {value}
           </div>
-          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
             {note}
           </p>
         </div>

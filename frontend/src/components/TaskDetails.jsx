@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, ArrowUpRight, CircleCheck } from "lucide-react";
 import { StatusBadge } from "./workspace/WorkspaceUI";
 import { statusInfo } from "../utils/task-status";
+import { workflowStateLabel } from "./workflows/WorkflowGraph";
 export default function TaskDetails({ task }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,7 +32,7 @@ export default function TaskDetails({ task }) {
           </p>
         )}
         <span
-          className={`mt-2 inline-flex items-center gap-1.5 text-[11px] ${overdue ? "text-destructive" : "text-muted-foreground"}`}
+          className={`mt-2 inline-flex items-center gap-1.5 text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}
         >
           <CalendarDays size={12} />
           {validDate
@@ -40,6 +41,11 @@ export default function TaskDetails({ task }) {
         </span>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+        {task.workflowState && (
+          <span className="rounded-md bg-accent px-2 py-1 text-xs text-primary">
+            {workflowStateLabel(task.workflowState)}
+          </span>
+        )}
         <StatusBadge status={task.status} />
         {location.pathname === "/mytasks" && (
           <button

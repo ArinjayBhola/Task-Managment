@@ -7,6 +7,12 @@ export default {
   darkMode: "class",
   theme: {
     extend: {
+      fontWeight: {
+        normal: "500",
+        medium: "600",
+        semibold: "700",
+        bold: "750",
+      },
       colors: {
         card: "hsl(var(--card) / <alpha-value>)",
         destructive: {

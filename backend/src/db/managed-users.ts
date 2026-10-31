@@ -16,3 +16,17 @@ export async function createManagedUser(
   `);
   return created;
 }
+
+export async function deleteManagedUser(
+  db: Database,
+  userId: string,
+  adminId: string,
+  confirmation: string,
+) {
+  const {
+    rows: [result],
+  } = await db.execute(
+    sql`SELECT delete_managed_user(${userId}::uuid,${adminId}::uuid,${confirmation}) AS result`,
+  );
+  return result?.result || null;
+}

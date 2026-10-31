@@ -137,7 +137,8 @@ try {
     await request("user/bulktask", { token: userToken }),
     200,
   );
-  assert.ok(team.some((entry) => entry.id === otherUser.id));
+  assert.equal(team.length, 1);
+  assert.equal(team[0].id, createdUser.id);
   await json(
     await request(`user/bulktask/${task.id}`, { token: otherToken }),
     404,

@@ -334,6 +334,14 @@ for (const role of ["Admin", "User"]) {
     });
     await page.getByRole("button", { name: "Open menu" }).click();
     await expect(
+      page.getByText("A little more organized.", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("Less busywork. More room for the work that matters.", {
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
       page.getByRole("navigation").getByRole("link", {
         name: role === "Admin" ? "Team management" : "My tasks",
       }),
@@ -467,6 +475,80 @@ test("member dashboard has no workspace selector and restricts administration ro
   await page.goto("/usertasks");
   await expect(page).toHaveURL(/\/mytasks$/);
 });
+
+for (const theme of ["light", "dark"]) {
+  test(`user deletion requires email confirmation and keeps failures recoverable in ${theme} mode`, async ({
+    page,
+  }, testInfo) => {
+    await setup(page, { role: "Admin", theme });
+    let attempts = 0;
+    await page.route(`**/api/v1/admin/user/${userUuid(1)}`, async (route) => {
+      if (route.request().method() !== "DELETE") return route.fallback();
+      expect(route.request().postDataJSON()).toEqual({
+        confirmEmail: users[0].email,
+      });
+      attempts++;
+      await route.fulfill(
+        attempts === 1
+          ? {
+              status: 503,
+              json: {
+                message: "Deletion could not be completed. Please retry.",
+              },
+            }
+          : { json: { deleted: true } },
+      );
+    });
+    page.on("dialog", () => {
+      throw new Error("Native browser dialogs are not allowed");
+    });
+    await page.goto(`/user/${userUuid(1)}`);
+    await page
+      .getByRole("button", { name: "Delete user", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog");
+    const remove = dialog.getByRole("button", {
+      name: "Delete user permanently",
+      exact: true,
+    });
+    await expect(remove).toBeDisabled();
+    await dialog
+      .getByLabel("Member email to confirm")
+      .fill("someone-else@example.test");
+    await expect(remove).toBeDisabled();
+    await dialog
+      .getByRole("button", { name: "Keep user", exact: true })
+      .click();
+    expect(attempts).toBe(0);
+    await page
+      .getByRole("button", { name: "Delete user", exact: true })
+      .click();
+    await dialog.getByLabel("Member email to confirm").fill(users[0].email);
+    await expect(remove).toBeEnabled();
+    await expect(page.locator(".MuiDialog-container")).toHaveCSS("opacity", "1");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await noOverflow(page);
+    await page.screenshot({
+      path: testInfo.outputPath(`delete-user-${theme}.png`),
+      fullPage: true,
+    });
+    await remove.click();
+    await expect(
+      dialog.getByText("Deletion could not be completed. Please retry.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(dialog).toBeVisible();
+    await remove.click();
+    await expect(page).toHaveURL(/\/users$/);
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "User and related data permanently deleted." }),
+    ).toBeVisible();
+    expect(attempts).toBe(2);
+  });
+}
 
 for (const role of ["Admin", "User"]) {
   test(`${role} is redirected from public auth routes to their own dashboard`, async ({

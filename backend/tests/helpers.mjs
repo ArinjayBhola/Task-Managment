@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 const { outputFiles } = await build({
   stdin: {
     contents:
-      'export {createApp} from "./src/index"; export {hashPassword} from "./src/utils/password";',
+      'export {createApp} from "./src/index"; export {hashPassword} from "./src/utils/password"; export {definitionSchema} from "./src/workflows/definition";',
     resolveDir: process.cwd(),
   },
   bundle: true,
@@ -20,7 +20,7 @@ new Function("require", "module", "exports", outputFiles[0].text)(
   compiled,
   compiled.exports,
 );
-export const { createApp, hashPassword } = compiled.exports;
+export const { createApp, hashPassword, definitionSchema } = compiled.exports;
 export const adminId = "11111111-1111-4111-8111-111111111111";
 export const userId = "22222222-2222-4222-8222-222222222222";
 export const env = {

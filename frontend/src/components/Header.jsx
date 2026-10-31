@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import AccountSecurity from "./AccountSecurity";
+import WorkflowInbox from "./workflows/WorkflowInbox";
 import {
-  ArrowUpRight,
   ChevronRight,
   LayoutDashboard,
   ListTodo,
@@ -12,6 +12,7 @@ import {
   Users,
   X,
   ShieldCheck,
+  GitBranch,
 } from "lucide-react";
 import Brand from "./Brand";
 import { ThemeToggle } from "./ThemeProvider";
@@ -33,10 +34,12 @@ export default function Header() {
           label: "Task assignments",
           icon: LayoutDashboard,
         },
+        { to: "/admin/workflows", label: "Workflows", icon: GitBranch },
       ]
     : [{ to: "/mytasks", label: "My tasks", icon: ListTodo }];
-  const active =
-    location.pathname === "/mytasks"
+  const active = location.pathname.startsWith("/admin/workflows")
+    ? "Workflows"
+    : location.pathname === "/mytasks"
       ? "My tasks"
       : location.pathname === "/users"
         ? "Team management"
@@ -96,7 +99,7 @@ export default function Header() {
             <p className="truncate text-xs font-semibold">
               {admin ? "Admin console" : "My dashboard"}
             </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               {admin ? "People, access & delivery" : "My tasks & progress"}
             </p>
           </div>
@@ -108,7 +111,7 @@ export default function Header() {
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors ${isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`
               }
             >
               <Icon size={17} />
@@ -116,16 +119,7 @@ export default function Header() {
             </NavLink>
           ))}
         </nav>
-        <div className="mx-4 mt-auto mb-5 rounded-xl border border-border bg-background p-4">
-          <span className="mb-3 block text-primary">
-            <ArrowUpRight size={20} />
-          </span>
-          <p className="text-sm font-semibold">A little more organized.</p>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            Less busywork. More room for the work that matters.
-          </p>
-        </div>
-        <div className="border-t border-border p-4">
+        <div className="mt-auto border-t border-border p-4">
           <AccountSecurity />
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
@@ -135,7 +129,7 @@ export default function Header() {
               <p className="truncate text-xs font-semibold" title={email}>
                 {email}
               </p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {admin ? "Administrator" : "Member"}
               </p>
             </div>
@@ -173,7 +167,8 @@ export default function Header() {
           <span className="text-xs font-medium">{active}</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+          <WorkflowInbox />
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
             {admin ? <ShieldCheck size={12} /> : <Users size={12} />}
             {admin ? "Admin" : "Member"}
           </span>

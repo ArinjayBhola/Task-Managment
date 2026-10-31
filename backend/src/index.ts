@@ -8,6 +8,8 @@ import { Bindings, Variables } from "./types";
 import { createAdminAuthRouter } from "./routes/admin-auth";
 import { getDb } from "./db";
 import { createUserAuthRouter } from "./routes/user-auth";
+import { createWorkflowApi } from "./routes/workflows";
+import { reconcileWorkflows } from "./workflows/engine";
 
 export function createApp(databaseFactory = getDb) {
   const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -56,6 +58,7 @@ export function createApp(databaseFactory = getDb) {
   });
   app.route("/", createSessionApi());
   app.route("/", createTaskApi(databaseFactory));
+  app.route("/", createWorkflowApi(databaseFactory));
   app.route("/api/v1/admin", createAdminAuthRouter(databaseFactory));
   app.route("/api/v1/user", createUserAuthRouter(databaseFactory));
 
@@ -71,4 +74,11 @@ export function createApp(databaseFactory = getDb) {
   return app;
 }
 
-export default createApp();
+const app = createApp();
+export default {
+  fetch: app.fetch,
+  request: app.request.bind(app),
+  scheduled: async (_event: ScheduledController, env: Bindings) => {
+    await reconcileWorkflows(getDb(env.DATABASE_URL));
+  },
+};

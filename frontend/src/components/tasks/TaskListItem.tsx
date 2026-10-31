@@ -24,7 +24,7 @@ export const TaskListItem = ({ task, onClick, isSelected }: TaskListItemProps) =
         <span className="text-sm font-medium truncate text-foreground/90 group-hover:text-foreground">
           {task.title}
         </span>
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest bg-muted px-1.5 py-0.5 rounded leading-none shrink-0">
+        <span className="text-xs text-muted-foreground uppercase tracking-widest bg-muted px-1.5 py-0.5 rounded leading-none shrink-0">
           ENG-{task.id.slice(0, 3)}
         </span>
       </div>
@@ -36,7 +36,7 @@ export const TaskListItem = ({ task, onClick, isSelected }: TaskListItemProps) =
           </span>
         )}
         <PriorityBadge priority={task.priority} />
-        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[10px] font-bold">
+        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-xs font-bold">
           AB
         </div>
       </div>

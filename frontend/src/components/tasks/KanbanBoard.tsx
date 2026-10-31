@@ -53,7 +53,7 @@ const KanbanCard = ({ task, onClick }: { task: Task; onClick: () => void }) => (
     className="group p-4 bg-background border border-border/60 rounded-xl shadow-sm hover:border-primary/30 hover:shadow-md cursor-pointer transition-all space-y-3"
   >
     <div className="flex items-center justify-between">
-       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+       <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
          ENG-{task.id.slice(0, 3)}
        </span>
        <div className={cn(
@@ -70,7 +70,7 @@ const KanbanCard = ({ task, onClick }: { task: Task; onClick: () => void }) => (
         <div className="w-5 h-5 rounded-full bg-accent border-2 border-background flex items-center justify-center text-[8px] font-bold">AB</div>
       </div>
       {task.dueDate && (
-        <span className="text-[10px] text-muted-foreground font-medium">
+        <span className="text-xs text-muted-foreground font-medium">
           {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </span>
       )}

@@ -1,4 +1,5 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import DeleteUserButton from "../../components/DeleteUserButton";
 import { ArrowLeft, Plus, Mail } from "lucide-react";
 import useWorkspaceData from "../../hooks/useWorkspaceData";
 import HomeShimmer from "../../components/HomeShimmer";
@@ -12,6 +13,7 @@ import {
 } from "../../components/workspace/WorkspaceUI";
 export default function SingleUser() {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const {
     data: user,
     loading,
@@ -44,12 +46,20 @@ export default function SingleUser() {
               </span>
             }
             action={
-              <Link to={`/task/${userId}`}>
-                <Button>
-                  <Plus size={15} />
-                  Assign a task
-                </Button>
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link to={`/task/${userId}`}>
+                  <Button>
+                    <Plus size={15} />
+                    Assign a task
+                  </Button>
+                </Link>
+                {user && (
+                  <DeleteUserButton
+                    user={user}
+                    onDeleted={() => navigate("/users", { replace: true })}
+                  />
+                )}
+              </div>
             }
           />
           <Metrics users={[user]} tasks={tasks} personal />
